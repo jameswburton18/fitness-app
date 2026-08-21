@@ -150,6 +150,23 @@ summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
 .light p{margin:0; font-size:.9rem; color:var(--ink2)}
 .light p strong{color:var(--ink)}
 
+/* ============ body trends ============ */
+.trend-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+.trend{background:var(--bg3); border-radius:12px; padding:10px 12px}
+.trend .tl{font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3)}
+.trend .tv{font-family:"Bricolage Grotesque",sans-serif; font-size:1.4rem; font-weight:800; line-height:1.2}
+.trend .tv small{font-size:.7rem; font-weight:600; color:var(--ink3)}
+.trend svg{display:block; width:100%; height:44px; margin-top:4px}
+.trend .delta{font-size:.72rem; font-weight:600}
+.trend .delta.down{color:var(--good)} .trend .delta.up{color:var(--alert)} .trend .delta.flat{color:var(--ink3)}
+.ck-row{padding:12px 0; border-bottom:1px solid var(--line)}
+.ck-row:last-of-type{border-bottom:none}
+.ck-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px}
+.ck-head .cn{font-weight:600; font-size:.92rem}
+.ck-head .cv{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.1rem}
+.ck-row input[type=range]{width:100%; accent-color:var(--accent); height:28px}
+.ck-scale{display:flex; justify-content:space-between; font-size:.68rem; color:var(--ink3)}
+
 /* ============ progress ============ */
 .hist{display:flex; flex-direction:column}
 .hist-row{display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid var(--line); font-size:.92rem}
@@ -181,9 +198,24 @@ summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
 .p-phase.work{color:var(--accent)} .p-phase.rest{color:var(--rest)}
 .p-name{font-family:"Bricolage Grotesque",sans-serif; font-size:1.7rem; font-weight:800; letter-spacing:-.02em; line-height:1.15; text-wrap:balance}
 .p-detail{color:var(--ink2); font-size:1rem; margin-top:6px; font-weight:600}
-.p-timer{font-family:"Bricolage Grotesque",sans-serif; font-size:5.2rem; font-weight:800; line-height:1; margin:18px 0 6px; font-variant-numeric:tabular-nums}
+.ring-wrap{position:relative; width:216px; height:216px; margin:14px auto 6px}
+.ring-wrap svg{width:100%; height:100%; transform:rotate(-90deg)}
+.ring-wrap .track{fill:none; stroke:var(--bg3); stroke-width:10}
+.ring-wrap .arc{fill:none; stroke:var(--accent); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke .3s}
+.ring-wrap.resting .arc{stroke:var(--rest)}
+.p-timer{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:"Bricolage Grotesque",sans-serif; font-size:4.4rem; font-weight:800; font-variant-numeric:tabular-nums;
+}
 .p-reps{font-family:"Bricolage Grotesque",sans-serif; font-size:3.4rem; font-weight:800; line-height:1.1; margin:18px 0 6px}
 .p-cues{color:var(--ink2); font-size:.9rem; max-width:34ch; margin:8px auto 0; min-height:3em}
+.p-video{display:inline-block; margin-top:6px; font-size:.82rem; font-weight:600; color:var(--rest); text-decoration:none}
+.p-video:empty{display:none}
+.vid-link{font-size:.8rem; font-weight:600; color:var(--rest); text-decoration:none}
+.p-main.stepin{animation:stepin .22s ease}
+@keyframes stepin{from{opacity:0; transform:translateY(8px)} to{opacity:1}}
+#modal{animation:modalin .22s ease}
+@keyframes modalin{from{opacity:0; transform:translateY(18px)} to{opacity:1}}
 .p-next{color:var(--ink3); font-size:.85rem; margin-top:10px}
 .p-next strong{color:var(--ink2)}
 .p-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
@@ -298,6 +330,12 @@ summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
   <!-- ================= PROGRESS ================= -->
   <section class="screen" id="scr-progress">
     <div class="card">
+      <div class="eyebrow">Body trends</div>
+      <p style="margin:0">How each area has felt, 0 (silent) to 10 (bad). The goal is drift downward.</p>
+      <div class="trend-grid" id="trend-grid"></div>
+      <button class="ghost-btn" id="btn-checkin" style="margin-top:12px">Check in now</button>
+    </div>
+    <div class="card">
       <div class="eyebrow">Last 8 weeks</div>
       <p style="margin:0 0 2px">Sessions per week — aim is <strong>5+</strong> (3 strength, 1 conditioning, 1+ mobility).</p>
       <div class="bars" id="prog-bars"></div>
@@ -332,6 +370,7 @@ summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
     <div class="p-detail" id="p-detail"></div>
     <div id="p-clock"></div>
     <div class="p-cues" id="p-cues"></div>
+    <a class="p-video" id="p-video" target="_blank" rel="noopener"></a>
     <div class="p-next" id="p-next"></div>
   </div>
   <div class="p-actions">
@@ -552,6 +591,11 @@ const store = {
 };
 let levels  = store.get('levels', {});   // slotId → rung index
 let history = store.get('history', []);  // [{d:'2026-08-21', id, title, mins}]
+let painLog = store.get('pain', []);     // [{d, toe, knee, back, ham}] — one per day
+const AREAS = [ ['toe','Big toe'], ['knee','Knees'], ['back','Lower back'], ['ham','Hamstring'] ];
+
+// Ask the browser not to evict our data under storage pressure.
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 const lvl = id => Math.min(levels[id]||0, LADDERS[id].levels.length-1);
 
 const todayISO = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
@@ -656,7 +700,7 @@ function ladderHTML(id){
   h += '<p style="font-size:.88rem;color:var(--ink2);margin:8px 0 0">'+esc(L.why)+'</p><div class="ladder">';
   L.levels.forEach((v,i)=>{
     const dose = v.mode==='time' ? (v.sets+' × '+v.secs+'s') : (v.sets+' × '+v.reps);
-    h += '<div class="rung'+(i===cur?' cur':'')+'"><div class="n num">'+(i+1)+'</div><div class="info"><div class="rn">'+esc(v.n)+' <span style="color:var(--ink3);font-weight:500">· '+esc(dose)+'</span></div><div class="rd">'+esc(v.d)+'</div></div></div>';
+    h += '<div class="rung'+(i===cur?' cur':'')+'"><div class="n num">'+(i+1)+'</div><div class="info"><div class="rn">'+esc(v.n)+' <span style="color:var(--ink3);font-weight:500">· '+esc(dose)+'</span></div><div class="rd">'+esc(v.d)+'</div></div><a class="vid-link" href="'+ytLink(v.n)+'" target="_blank" rel="noopener" aria-label="Watch form videos for '+esc(v.n)+'">↗</a></div>';
   });
   h += '</div><div class="lvl-ctl"><button data-lvl="'+id+'" data-dir="-1">− Easier</button><button data-lvl="'+id+'" data-dir="1">Harder +</button></div></details>';
   return h;
@@ -676,7 +720,7 @@ function renderLibrary(){
   Object.values(DRILLS).forEach(d=>{ (groups[d.area]=groups[d.area]||[]).push(d); });
   $('#lib-fixed').innerHTML = Object.entries(groups).map(([area,ds])=>
     '<details><summary><span>'+esc(area)+'<span class="sub">'+ds.length+' drills</span></span><span class="chev">›</span></summary>'+
-    ds.map(d=>'<div style="margin:10px 0"><strong style="font-size:.92rem">'+esc(d.n)+'</strong><div style="font-size:.85rem;color:var(--ink2)">'+esc(d.d)+'</div><ul class="cue-list">'+d.cues.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul></div>').join('')+
+    ds.map(d=>'<div style="margin:10px 0"><strong style="font-size:.92rem">'+esc(d.n)+'</strong> <a class="vid-link" href="'+ytLink(d.n)+'" target="_blank" rel="noopener">Watch ↗</a><div style="font-size:.85rem;color:var(--ink2)">'+esc(d.d)+'</div><ul class="cue-list">'+d.cues.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul></div>').join('')+
     '</details>'
   ).join('');
 }
@@ -699,19 +743,121 @@ function renderProgress(){
   }
 }
 
-function render(){ renderToday(); renderPlan(); renderLibrary(); renderProgress(); }
+/* ---- body check-in + trends ---- */
+function lastPain(){ return painLog.length ? painLog[painLog.length-1] : null; }
 
-/* backup */
+function checkinHTML(){
+  const prev = lastPain();
+  return '<h3 style="margin-top:14px">Body check-in</h3>'+
+    '<p style="margin:2px 0 4px">How is each area <em>today</em>? 0 = didn’t notice it, 10 = really bad.</p>'+
+    AREAS.map(([k,label])=>{
+      const v = prev && typeof prev[k]==='number' ? prev[k] : 2;
+      return '<div class="ck-row"><div class="ck-head"><span class="cn">'+label+'</span><span class="cv num" id="ckv-'+k+'">'+v+'</span></div>'+
+        '<input type="range" min="0" max="10" step="1" value="'+v+'" id="ck-'+k+'">'+
+        '<div class="ck-scale"><span>quiet</span><span>bad</span></div></div>';
+    }).join('');
+}
+function wireCheckin(){
+  AREAS.forEach(([k])=>{
+    const el=document.getElementById('ck-'+k);
+    if(el) el.addEventListener('input', ()=>{ document.getElementById('ckv-'+k).textContent=el.value; });
+  });
+}
+function saveCheckin(){
+  const entry={d:todayISO()};
+  let any=false;
+  AREAS.forEach(([k])=>{ const el=document.getElementById('ck-'+k); if(el){ entry[k]=+el.value; any=true; } });
+  if(!any) return;
+  painLog = painLog.filter(p=>p.d!==entry.d); // one entry per day, last write wins
+  painLog.push(entry);
+  painLog.sort((a,b)=>a.d<b.d?-1:1);
+  store.set('pain', painLog);
+}
+
+function sparkline(points){ // points: [{d, v}] over fixed 0–10 scale
+  const W=140, H=44, PAD=4;
+  if(points.length<2){
+    return '<svg viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><line x1="0" y1="'+(H-1)+'" x2="'+W+'" y2="'+(H-1)+'" stroke="var(--line)" stroke-width="1"/>'+
+      (points.length===1?'<circle cx="'+(W-PAD)+'" cy="'+(H-PAD-(points[0].v/10)*(H-2*PAD))+'" r="4" fill="var(--rest)"/>':'')+'</svg>';
+  }
+  const t0=new Date(points[0].d).getTime(), t1=new Date(points[points.length-1].d).getTime();
+  const x=d=>{ const t=new Date(d).getTime(); return PAD+(t1===t0?1:(t-t0)/(t1-t0))*(W-2*PAD); };
+  const y=v=>H-PAD-(v/10)*(H-2*PAD);
+  const pts=points.map(p=>x(p.d).toFixed(1)+','+y(p.v).toFixed(1)).join(' ');
+  const last=points[points.length-1];
+  return '<svg viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+    '<line x1="0" y1="'+y(0)+'" x2="'+W+'" y2="'+y(0)+'" stroke="var(--line)" stroke-width="1"/>'+
+    '<line x1="0" y1="'+y(5)+'" x2="'+W+'" y2="'+y(5)+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="var(--rest)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+x(last.d).toFixed(1)+'" cy="'+y(last.v).toFixed(1)+'" r="4" fill="var(--rest)"/></svg>';
+}
+
+function renderTrends(){
+  const g=$('#trend-grid');
+  if(!painLog.length){
+    g.innerHTML='<p style="grid-column:1/-1;color:var(--ink3);font-size:.88rem;margin:0">No check-ins yet — you’ll be asked after each workout, or tap below.</p>';
+    return;
+  }
+  const cutoff=isoOffset(-56);
+  g.innerHTML = AREAS.map(([k,label])=>{
+    const pts=painLog.filter(p=>p.d>=cutoff && typeof p[k]==='number').map(p=>({d:p.d, v:p[k]}));
+    const cur=pts.length?pts[pts.length-1].v:null;
+    let delta='';
+    if(pts.length>=4){
+      const half=Math.floor(pts.length/2);
+      const avg=a=>a.reduce((s,p)=>s+p.v,0)/a.length;
+      const diff=avg(pts.slice(half))-avg(pts.slice(0,half));
+      delta = diff<-0.5?'<div class="delta down">improving</div>':diff>0.5?'<div class="delta up">worsening</div>':'<div class="delta flat">steady</div>';
+    }
+    return '<div class="trend"><div class="tl">'+label+'</div><div class="tv num">'+(cur===null?'—':cur+'<small> /10</small>')+'</div>'+sparkline(pts)+delta+'</div>';
+  }).join('');
+}
+
+function openCheckin(){
+  openModal('<h2>Body check-in</h2>'+checkinHTML()+'<button class="big-btn" id="ck-save" style="margin-top:14px">Save</button>');
+  wireCheckin();
+  document.getElementById('ck-save').addEventListener('click', ()=>{ saveCheckin(); closeModal(); render(); });
+}
+$('#btn-checkin').addEventListener('click', openCheckin);
+
+const ytLink = name => 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' exercise proper form');
+
+function render(){ renderToday(); renderPlan(); renderLibrary(); renderProgress(); renderTrends(); }
+
+/* backup — file download/upload, clipboard fallback where downloads are blocked */
+function applyBackup(d){
+  if(!d || !d.levels || !d.history){ alert('That doesn’t look like a Sturdy backup.'); return; }
+  levels=d.levels; history=d.history; painLog=d.pain||[];
+  store.set('levels',levels); store.set('history',history); store.set('pain',painLog);
+  render(); alert('Restored.');
+}
 $('#btn-export').addEventListener('click', async ()=>{
-  const data = JSON.stringify({levels, history});
-  try{ await navigator.clipboard.writeText(data); alert('Backup copied to clipboard. Paste it somewhere safe (e.g. Keep).'); }
-  catch(e){ prompt('Copy this:', data); }
+  const data = JSON.stringify({app:'sturdy', exported:todayISO(), levels, history, pain:painLog});
+  let downloaded=false;
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    a.download='sturdy-backup-'+todayISO()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    downloaded=true;
+  }catch(e){}
+  if(!downloaded){
+    try{ await navigator.clipboard.writeText(data); alert('Downloads are blocked here, so the backup was copied to your clipboard instead — paste it somewhere safe.'); }
+    catch(e){ prompt('Copy this:', data); }
+  }
 });
 $('#btn-import').addEventListener('click', ()=>{
-  const t = prompt('Paste your backup:');
-  if(!t) return;
-  try{ const d=JSON.parse(t); if(d.levels&&d.history){ levels=d.levels; history=d.history; store.set('levels',levels); store.set('history',history); render(); alert('Restored.'); } else alert('That doesn’t look like a Sturdy backup.'); }
-  catch(e){ alert('Couldn’t read that backup.'); }
+  try{
+    const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+    inp.addEventListener('change', ()=>{
+      const f=inp.files && inp.files[0]; if(!f) return;
+      f.text().then(t=>{ try{ applyBackup(JSON.parse(t)); }catch(e){ alert('Couldn’t read that file.'); } });
+    });
+    inp.click();
+  }catch(e){
+    const t=prompt('Paste your backup:');
+    if(t){ try{ applyBackup(JSON.parse(t)); }catch(err){ alert('Couldn’t read that backup.'); } }
+  }
 });
 
 function logSession(id, title, mins){
@@ -781,6 +927,11 @@ function showStep(){
   clearInterval(timer); timer=null;
   const st=steps[stepIx];
   if(!st){ finishSession(); return; }
+  const main=document.querySelector('.p-main');
+  main.classList.remove('stepin'); void main.offsetWidth; main.classList.add('stepin');
+  const vid=$('#p-video');
+  if(st.kind==='work'){ vid.href=ytLink(st.name); vid.textContent='Watch form ↗'; }
+  else { vid.textContent=''; vid.removeAttribute('href'); }
   const workSteps = steps.filter(x=>x.kind==='work');
   const workIx = steps.slice(0,stepIx+1).filter(x=>x.kind==='work').length;
   $('#p-bar').style.width = Math.round((stepIx)/steps.length*100)+'%';
@@ -809,7 +960,15 @@ function showStep(){
 
 function startCountdown(secs){
   timeLeft=secs;
-  const draw=()=>{ $('#p-clock').innerHTML='<div class="p-timer num">'+timeLeft+'</div>'; };
+  const total=secs, C=(2*Math.PI*100).toFixed(1);
+  const resting = steps[stepIx] && steps[stepIx].kind==='rest';
+  $('#p-clock').innerHTML =
+    '<div class="ring-wrap'+(resting?' resting':'')+'">'+
+    '<svg viewBox="0 0 216 216"><circle class="track" cx="108" cy="108" r="100"/>'+
+    '<circle class="arc" id="ring-arc" cx="108" cy="108" r="100" stroke-dasharray="'+C+'" stroke-dashoffset="0"/></svg>'+
+    '<div class="p-timer" id="p-num">'+timeLeft+'</div></div>';
+  const arc=document.getElementById('ring-arc'), num=document.getElementById('p-num');
+  const draw=()=>{ num.textContent=timeLeft; arc.style.strokeDashoffset = (C*(1-timeLeft/total)).toFixed(1); };
   draw();
   timer=setInterval(()=>{
     if(paused) return;
@@ -847,8 +1006,10 @@ function finishSession(){
   } else {
     h+='<p>Nice work. Consistency is the whole game.</p>';
   }
-  h+='<button class="big-btn" id="fb-close" style="margin-top:16px">Close</button>';
+  h+=checkinHTML();
+  h+='<button class="big-btn" id="fb-close" style="margin-top:16px">Save & close</button>';
   openModal(h);
+  wireCheckin();
   document.querySelectorAll('.fb-btns button').forEach(b=>{
     b.addEventListener('click', ()=>{
       const row=b.closest('.fb-row'); row.querySelectorAll('button').forEach(x=>x.className='');
@@ -862,7 +1023,7 @@ function finishSession(){
       if(c==='up') levels[id]=Math.min(LADDERS[id].levels.length-1, lvl(id)+1);
       if(c==='down') levels[id]=Math.max(0, lvl(id)-1);
     });
-    store.set('levels',levels); closeModal(); render();
+    store.set('levels',levels); saveCheckin(); closeModal(); render();
   });
 }
 
