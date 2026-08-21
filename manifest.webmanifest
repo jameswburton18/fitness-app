@@ -1,0 +1,13 @@
+{
+  "name": "Sturdy",
+  "short_name": "Sturdy",
+  "description": "Personal home strength & rehab program",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#141b17",
+  "theme_color": "#141b17",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
