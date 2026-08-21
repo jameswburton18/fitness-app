@@ -833,17 +833,29 @@ function applyBackup(d){
 }
 $('#btn-export').addEventListener('click', async ()=>{
   const data = JSON.stringify({app:'sturdy', exported:todayISO(), levels, history, pain:painLog});
-  let downloaded=false;
+  const fname = 'sturdy-backup-'+todayISO()+'.json';
+  // Inside the claude.ai viewer, plain <a download> is inert — go through the
+  // downloads capability there; use a normal download everywhere else.
+  if(window.claude && typeof window.claude.use==='function'){
+    try{
+      const dl = await window.claude.use('downloads');
+      if(dl){
+        try{ await dl.save({filename:fname, data}); return; }
+        catch(err){ if(err && err.code==='declined') return; /* else fall through to clipboard */ }
+      }
+    }catch(e){}
+    try{ await navigator.clipboard.writeText(data); alert('Backup copied to clipboard — paste it somewhere safe.'); }
+    catch(e){ prompt('Copy this:', data); }
+    return;
+  }
   try{
     const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
-    a.download='sturdy-backup-'+todayISO()+'.json';
+    a.download=fname;
     document.body.appendChild(a); a.click(); a.remove();
-    downloaded=true;
-  }catch(e){}
-  if(!downloaded){
-    try{ await navigator.clipboard.writeText(data); alert('Downloads are blocked here, so the backup was copied to your clipboard instead — paste it somewhere safe.'); }
-    catch(e){ prompt('Copy this:', data); }
+  }catch(e){
+    try{ await navigator.clipboard.writeText(data); alert('Backup copied to clipboard — paste it somewhere safe.'); }
+    catch(e2){ prompt('Copy this:', data); }
   }
 });
 $('#btn-import').addEventListener('click', ()=>{
