@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101614">
+<meta name="description" content="Photograph your pool table mid-game and get the best shot, with aiming lines drawn on your photo.">
+<title>CueSight</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#101614; --card:#1a211e; --card-2:#232c28; --line:#2e3a34;
+    --ink:#ede7da; --ink-dim:#9aa8a0; --felt:#1fa26b; --felt-deep:#0e5c3c;
+    --chalk:#6fb7d8; --amber:#f5a623; --red:#e4573f; --hard:#f56e3c;
+    --r:14px;
+    --display:'Barlow Semi Condensed','Arial Narrow',system-ui,sans-serif;
+    --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--ground); color:var(--ink); font-family:var(--body);
+    font-size:16px; line-height:1.45; min-height:100vh;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 12px}
+
+  header.app{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 8px}
+  .brand{display:flex;align-items:baseline;gap:8px}
+  .brand h1{
+    font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.5px;
+    margin:0;text-transform:uppercase;
+  }
+  .brand h1 .cue{color:var(--felt)}
+  .brand .tag{font-size:12px;color:var(--ink-dim);letter-spacing:.08em;text-transform:uppercase}
+  .ghostbtn{
+    background:none;border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:999px;padding:7px 14px;font-family:var(--body);font-size:13px;font-weight:600;
+    cursor:pointer;
+  }
+  .ghostbtn:active{background:var(--card-2)}
+
+  nav.steps{display:flex;gap:6px;margin:4px 0 10px}
+  .step{
+    flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink-dim);
+    border-radius:10px;padding:7px 4px 6px;text-align:center;cursor:pointer;user-select:none;
+    font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:13px;font-weight:600;
+  }
+  .step .n{display:block;font-size:10px;letter-spacing:.14em;opacity:.7}
+  .step.current{border-color:var(--felt);color:var(--ink);background:linear-gradient(180deg,#17352a,#132a21)}
+  .step.done{color:var(--felt)}
+  .step.locked{opacity:.4;cursor:default}
+
+  .hint{font-size:14px;color:var(--ink-dim);margin:2px 2px 10px;min-height:20px}
+  .hint b{color:var(--ink);font-weight:600}
+
+  /* photo pick */
+  #introPanel{padding:26px 0 8px}
+  .bigbtns{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .bigbtn{
+    display:flex;align-items:center;gap:14px;width:100%;
+    background:linear-gradient(180deg,#17352a,#122a20);border:1px solid #2c5a46;color:var(--ink);
+    border-radius:var(--r);padding:18px 18px;font-family:var(--body);font-size:17px;font-weight:600;cursor:pointer;
+  }
+  .bigbtn.secondary{background:var(--card);border-color:var(--line)}
+  .bigbtn .ico{font-size:24px;width:34px;text-align:center}
+  .bigbtn small{display:block;font-weight:400;color:var(--ink-dim);font-size:13px}
+  .demolink{margin-top:18px;text-align:center}
+  .demolink button{background:none;border:none;color:var(--chalk);font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-family:var(--body)}
+  .introArt{
+    border:1px solid var(--line);border-radius:var(--r);background:var(--felt-deep);
+    background:linear-gradient(160deg,#0f6a45,#0a4c31);
+    padding:0;overflow:hidden;
+  }
+  .introArt svg{display:block;width:100%;height:auto}
+
+  /* canvas area */
+  #workArea{display:none}
+  .canvasShell{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000;position:relative}
+  #photoCanvas{display:block;width:100%;height:auto;touch-action:none}
+
+  .bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+  .chip{
+    border:1px solid var(--line);background:var(--card);color:var(--ink-dim);
+    border-radius:999px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--body);
+    min-height:40px;
+  }
+  .chip.on{border-color:var(--felt);color:var(--ink);background:#17352a}
+  .chip.cueChip.on{border-color:#cfd8d3;background:#2b3330}
+  .chip.mineChip.on{border-color:var(--chalk);background:#173242}
+  .chip.theirChip.on{border-color:var(--red);background:#3a201b}
+  .chip.eightChip.on{border-color:#888;background:#242424}
+  .chip.danger{color:var(--red)}
+  select.chip{appearance:none;padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-dim) 50%),linear-gradient(135deg,var(--ink-dim) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+  .spacer{flex:1}
+  .primary{
+    background:var(--felt);border:none;color:#07130d;border-radius:999px;
+    padding:11px 20px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--body);min-height:44px;
+  }
+  .primary:disabled{opacity:.35}
+
+  /* shots */
+  #shotsArea{display:none}
+  .guidance{
+    border:1px solid #2c5a46;background:linear-gradient(180deg,#142c22,#101f19);
+    border-radius:var(--r);padding:12px 14px;margin:10px 0;font-size:15px;
+  }
+  .guidance .lede{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:14px;color:var(--felt);margin-bottom:3px}
+  .guidance b{color:var(--amber)}
+  .guidance .cueb{color:var(--chalk)}
+  #diagramShell{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#0b100e;margin:10px 0}
+  #diagramCanvas{display:block;width:100%;height:auto}
+  .cards{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x proximity}
+  .card{
+    min-width:210px;max-width:230px;scroll-snap-align:start;flex-shrink:0;
+    border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 13px;cursor:pointer;
+  }
+  .card.sel{border-color:var(--felt);background:linear-gradient(180deg,#17352a,#132a21)}
+  .card .top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .rank{
+    font-family:var(--display);font-weight:700;font-size:15px;color:#07130d;background:var(--felt);
+    border-radius:6px;padding:1px 7px;
+  }
+  .card.sel .rank{background:var(--ink)}
+  .card .name{font-weight:700;font-size:15px}
+  .card .meta{font-size:13px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:2px 6px}
+  .badge.direct{background:#173242;color:var(--chalk)}
+  .badge.bank{background:#3a2a12;color:var(--amber)}
+  .diff{font-size:12px;font-weight:700;border-radius:5px;padding:2px 7px}
+  .diff.d0{background:#12352622;color:var(--felt);border:1px solid #1fa26b55}
+  .diff.d1{background:#3a2a1222;color:var(--amber);border:1px solid #f5a62355}
+  .diff.d2{background:#38180f22;color:var(--hard);border:1px solid #f56e3c55}
+  .diff.d3{background:#38121222;color:var(--red);border:1px solid #e4573f55}
+  .noshot{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:16px;font-size:15px;color:var(--ink-dim)}
+  .noshot b{color:var(--ink)}
+
+  footer.app{margin-top:26px;text-align:center;font-size:12px;color:#5c6a63}
+
+  #toast{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);
+    background:#e9e2d2;color:#14201a;font-weight:600;font-size:14px;border-radius:999px;
+    padding:10px 18px;transition:transform .25s ease;z-index:50;max-width:88vw;text-align:center;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion: reduce){ #toast{transition:none} }
+  input[type=file]{display:none}
+  button:focus-visible,.step:focus-visible,.card:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <header class="app">
+    <div class="brand">
+      <h1><span class="cue">Cue</span>Sight</h1>
+      <span class="tag">shot picker</span>
+    </div>
+    <button class="ghostbtn" id="newPhotoBtn">New photo</button>
+  </header>
+
+  <nav class="steps" id="stepsNav">
+    <div class="step" data-step="photo" tabindex="0"><span class="n">1</span>Photo</div>
+    <div class="step" data-step="corners" tabindex="0"><span class="n">2</span>Table</div>
+    <div class="step" data-step="balls" tabindex="0"><span class="n">3</span>Balls</div>
+    <div class="step" data-step="shots" tabindex="0"><span class="n">4</span>Shots</div>
+  </nav>
+
+  <div class="hint" id="hint"></div>
+
+  <section id="introPanel">
+    <div class="introArt" aria-hidden="true">
+      <svg viewBox="0 0 600 210">
+        <rect x="0" y="0" width="600" height="210" fill="#0b4a30"/>
+        <rect x="16" y="16" width="568" height="178" rx="12" fill="#0f6a45"/>
+        <circle cx="16" cy="16" r="15" fill="#07130d"/><circle cx="584" cy="16" r="15" fill="#07130d"/>
+        <circle cx="16" cy="194" r="15" fill="#07130d"/><circle cx="584" cy="194" r="15" fill="#07130d"/>
+        <circle cx="300" cy="12" r="12" fill="#07130d"/><circle cx="300" cy="198" r="12" fill="#07130d"/>
+        <line x1="150" y1="150" x2="345" y2="88" stroke="#6fb7d8" stroke-width="3" stroke-dasharray="8 7" stroke-linecap="round"/>
+        <circle cx="358" cy="84" r="15" fill="none" stroke="#6fb7d8" stroke-width="2.5" stroke-dasharray="5 5"/>
+        <line x1="382" y1="72" x2="560" y2="30" stroke="#f5a623" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M560 30 l-16 -1 l7 14 z" fill="#f5a623"/>
+        <circle cx="150" cy="150" r="16" fill="#ede7da"/>
+        <circle cx="372" cy="80" r="16" fill="#e0483a"/>
+        <circle cx="452" cy="132" r="16" fill="#3b76c0"/>
+        <circle cx="238" cy="60" r="16" fill="#111"/><circle cx="238" cy="60" r="7" fill="#ede7da" opacity=".9"/>
+      </svg>
+    </div>
+    <div class="bigbtns">
+      <button class="bigbtn" id="cameraBtn"><span class="ico">📷</span><span>Take a photo<small>Stand behind the shot, get all six pockets in frame</small></span></button>
+      <button class="bigbtn secondary" id="uploadBtn"><span class="ico">🖼️</span><span>Choose from library<small>Use a photo you already took</small></span></button>
+    </div>
+    <div class="demolink"><button id="demoBtn">No table handy? Load a demo rack</button></div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+    <input type="file" id="uploadInput" accept="image/*">
+  </section>
+
+  <section id="workArea">
+    <div class="canvasShell"><canvas id="photoCanvas"></canvas></div>
+
+    <div class="bar" id="cornersBar">
+      <select class="chip" id="tableSize" aria-label="Table size">
+        <option value="uk6">English 6ft</option>
+        <option value="us7" selected>Bar table 7ft</option>
+        <option value="us8">Home 8ft</option>
+        <option value="us9">Tournament 9ft</option>
+      </select>
+      <button class="chip" id="swapBtn">↔ Swap long side</button>
+      <button class="chip danger" id="resetCornersBtn">Reset corners</button>
+      <span class="spacer"></span>
+      <button class="primary" id="toBallsBtn" disabled>Next: balls →</button>
+    </div>
+
+    <div class="bar" id="ballsBar">
+      <button class="chip cueChip" data-mode="cue">◯ Cue ball</button>
+      <button class="chip mineChip" data-mode="mine">● My balls</button>
+      <button class="chip theirChip" data-mode="theirs">● Theirs</button>
+      <button class="chip eightChip" data-mode="eight">8-ball</button>
+      <button class="chip" data-mode="erase">✕ Remove</button>
+      <button class="chip" id="autoBtn">✨ Auto-detect</button>
+      <button class="chip danger" id="clearBallsBtn">Clear</button>
+      <span class="spacer"></span>
+      <button class="primary" id="toShotsBtn">Best shot →</button>
+    </div>
+
+    <div id="shotsArea">
+      <div class="guidance" id="guidance"></div>
+      <div id="diagramShell"><canvas id="diagramCanvas"></canvas></div>
+      <div class="cards" id="cards"></div>
+      <div class="bar">
+        <button class="chip" id="backToBallsBtn">← Adjust balls</button>
+        <span class="spacer"></span>
+        <button class="primary" id="reanalyzeBtn">Re-analyze</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="app">Angles assume a level table and a centre-ball hit · tap the base of each ball, not its top</footer>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ============================== state ============================== */
+const TABLE_SIZES = {
+  uk6:{L:72, W:36, R:1.0,  label:'English 6ft'},
+  us7:{L:78, W:39, R:1.125,label:'Bar table 7ft'},
+  us8:{L:88, W:44, R:1.125,label:'Home 8ft'},
+  us9:{L:100,W:50, R:1.125,label:'Tournament 9ft'},
+};
+let TW=78, TH=39, BR=1.125;
+const RAD = Math.PI/180;
+
+const state = {
+  step:'photo',
+  imgLoaded:false,
+  corners:[],          // image-space {x,y}, tapped in order around the table
+  flip:false,          // overrides the long-side guess
+  H:null, Hinv:null,   // image->table, table->image
+  balls:[],            // {x,y (table inches), type:'cue'|'mine'|'theirs'|'eight'}
+  mode:'cue',
+  shots:[], selShot:0, shotErr:null, on8:false, blockedCount:0,
+};
+
+/* ============================== vec math ============================== */
+const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y});
+const add=(a,b)=>({x:a.x+b.x,y:a.y+b.y});
+const scl=(a,k)=>({x:a.x*k,y:a.y*k});
+const len=a=>Math.hypot(a.x,a.y);
+const nrm=a=>{const l=len(a)||1e-9;return{x:a.x/l,y:a.y/l};};
+const dot=(a,b)=>a.x*b.x+a.y*b.y;
+const crs=(a,b)=>a.x*b.y-a.y*b.x;
+function distPtSeg(p,a,b){
+  const ab=sub(b,a);
+  const t=Math.max(0,Math.min(1,dot(sub(p,a),ab)/(dot(ab,ab)||1e-9)));
+  return len(sub(p,add(a,scl(ab,t))));
+}
+
+/* homography via DLT + gauss-jordan */
+function solve8(A){
+  for(let c=0;c<8;c++){
+    let p=c;
+    for(let r=c+1;r<8;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r;
+    const t=A[c];A[c]=A[p];A[p]=t;
+    if(Math.abs(A[c][c])<1e-9) return null;
+    for(let r=0;r<8;r++){
+      if(r===c) continue;
+      const f=A[r][c]/A[c][c];
+      for(let k=c;k<9;k++) A[r][k]-=f*A[c][k];
+    }
+  }
+  return A.map((row,i)=>row[8]/row[i]);
+}
+function homography(src,dst){
+  const A=[];
+  for(let i=0;i<4;i++){
+    const x=src[i].x,y=src[i].y,X=dst[i].x,Y=dst[i].y;
+    A.push([x,y,1,0,0,0,-X*x,-X*y,X]);
+    A.push([0,0,0,x,y,1,-Y*x,-Y*y,Y]);
+  }
+  const h=solve8(A);
+  return h?[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1]:null;
+}
+function applyH(H,x,y){
+  const w=H[6]*x+H[7]*y+H[8];
+  return {x:(H[0]*x+H[1]*y+H[2])/w, y:(H[3]*x+H[4]*y+H[5])/w};
+}
+function updateHomography(){
+  if(state.corners.length<4){state.H=state.Hinv=null;return;}
+  const c=state.corners;
+  const e=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const longFirst=(e(c[0],c[1])+e(c[2],c[3]))>=(e(c[1],c[2])+e(c[3],c[0]));
+  let s=longFirst?0:1;
+  if(state.flip) s=(s+1)%2;
+  const src=[c[s%4],c[(s+1)%4],c[(s+2)%4],c[(s+3)%4]];
+  const dst=[{x:0,y:0},{x:TW,y:0},{x:TW,y:TH},{x:0,y:TH}];
+  state.H=homography(src,dst);
+  state.Hinv=homography(dst,src);
+}
+
+/* ============================== table model ============================== */
+function pockets(){
+  const c=1.1, s=1.5; // aim points sit just inside the pocket mouths
+  return [
+    {id:'TL',x:0,   y:0,  aim:{x:-c,   y:-c},   type:'corner',n:nrm({x:-1,y:-1}),label:'top-left corner'},
+    {id:'TR',x:TW,  y:0,  aim:{x:TW+c, y:-c},   type:'corner',n:nrm({x:1,y:-1}), label:'top-right corner'},
+    {id:'BL',x:0,   y:TH, aim:{x:-c,   y:TH+c}, type:'corner',n:nrm({x:-1,y:1}), label:'bottom-left corner'},
+    {id:'BR',x:TW,  y:TH, aim:{x:TW+c, y:TH+c}, type:'corner',n:nrm({x:1,y:1}),  label:'bottom-right corner'},
+    {id:'TS',x:TW/2,y:0,  aim:{x:TW/2, y:-s},   type:'side',  n:{x:0,y:-1},      label:'top side pocket'},
+    {id:'BS',x:TW/2,y:TH, aim:{x:TW/2, y:TH+s}, type:'side',  n:{x:0,y:1},      label:'bottom side pocket'},
+  ];
+}
+function rails(){
+  return [
+    {axis:'y',pos:BR,     side:'top'},
+    {axis:'y',pos:TH-BR,  side:'bottom'},
+    {axis:'x',pos:BR,     side:'left'},
+    {axis:'x',pos:TW-BR,  side:'right'},
+  ];
+}
+
+/* ============================== shot engine ============================== */
+function pathBlocked(a,b,obstacles){
+  const CLEAR=2*BR-0.18;
+  for(const o of obstacles){
+    if(distPtSeg(o,a,b)<CLEAR) return o;
+  }
+  return null;
+}
+function ghostReachable(G){
+  return G.x>-0.5 && G.x<TW+0.5 && G.y>-0.5 && G.y<TH+0.5;
+}
+function addDirect(out,C,B,P){
+  const u=nrm(sub(P.aim,B));
+  const G=sub(B,scl(u,2*BR));
+  if(!ghostReachable(G)) return;
+  const toG=sub(G,C), d1=len(toG);
+  const cosCut=dot(nrm(toG),u);
+  if(cosCut<0.12) return;                       // > ~83° cut: not a real shot
+  const cosApp=dot(u,P.n);
+  const minApp=P.type==='side'?Math.cos(72*RAD):Math.cos(85*RAD);
+  if(cosApp<minApp) return;                     // pocket won't accept this angle
+  const obs=state.balls.filter(o=>o!==C&&o!==B);
+  if(pathBlocked(C,G,obs)||pathBlocked(B,P.aim,obs)){state.blockedCount++;return;}
+  const d2=len(sub(P.aim,B));
+  const f=P.type==='side'?1/Math.max(cosApp,0.25):1/Math.max(cosApp,0.35);
+  const D=(Math.max(d1,6)/12)*(Math.max(d2,6)/12)*f/Math.max(cosCut,0.1);
+  out.push({kind:'direct',B,P,G,d1,d2,cosCut,D,path:[B,P.aim]});
+}
+function mirrorPt(p,rail){
+  return rail.axis==='y'?{x:p.x,y:2*rail.pos-p.y}:{x:2*rail.pos-p.x,y:p.y};
+}
+function addBank(out,C,B,P,rail){
+  if(rail.axis==='y'&&Math.abs(P.y-(rail.side==='top'?0:TH))<1) return;
+  if(rail.axis==='x'&&Math.abs(P.x-(rail.side==='left'?0:TW))<1) return;
+  const Pm=mirrorPt(P.aim,rail);
+  const u=nrm(sub(Pm,B));
+  const G=sub(B,scl(u,2*BR));
+  if(!ghostReachable(G)) return;
+  const dv=sub(Pm,B);
+  const t=rail.axis==='y'?(rail.pos-B.y)/(dv.y||1e-9):(rail.pos-B.x)/(dv.x||1e-9);
+  if(t<=0.05||t>=0.95) return;
+  const bounce=add(B,scl(dv,t));
+  if(rail.axis==='y'){ if(bounce.x<6||bounce.x>TW-6||Math.abs(bounce.x-TW/2)<7) return; }
+  else               { if(bounce.y<6||bounce.y>TH-6) return; }
+  const toG=sub(G,C), d1=len(toG);
+  const cosCut=dot(nrm(toG),u);
+  if(cosCut<0.25) return;
+  const leg2=nrm(sub(P.aim,bounce));
+  const cosApp=dot(leg2,P.n);
+  const minApp=P.type==='side'?Math.cos(70*RAD):Math.cos(80*RAD);
+  if(cosApp<minApp) return;
+  const obs=state.balls.filter(o=>o!==C&&o!==B);
+  if(pathBlocked(C,G,obs)||pathBlocked(B,bounce,obs)||pathBlocked(bounce,P.aim,obs)){state.blockedCount++;return;}
+  const d2=len(sub(bounce,B))+len(sub(P.aim,bounce));
+  const D=3.5*(Math.max(d1,6)/12)*(Math.max(d2,6)/12)/Math.max(cosCut,0.1)/Math.max(cosApp,0.3);
+  out.push({kind:'bank',rail:rail.side,B,P,G,bounce,d1,d2,cosCut,D,path:[B,bounce,P.aim]});
+}
+function computeShots(){
+  state.blockedCount=0;
+  const cue=state.balls.find(b=>b.type==='cue');
+  if(!cue) return {error:'no-cue'};
+  let targets=state.balls.filter(b=>b.type==='mine');
+  let on8=false;
+  if(!targets.length){
+    targets=state.balls.filter(b=>b.type==='eight');
+    on8=targets.length>0;
+  }
+  if(!targets.length) return {error:'no-targets'};
+  targets.forEach((b,i)=>{b._label=on8?'8':String.fromCharCode(65+i);});
+  const out=[];
+  for(const B of targets){
+    for(const P of pockets()){
+      addDirect(out,cue,B,P);
+      for(const r of rails()) addBank(out,cue,B,P,r);
+    }
+  }
+  out.sort((a,b)=>a.D-b.D);
+  return {shots:out.slice(0,8), cue, on8};
+}
+function difficulty(D){
+  if(D<5)  return {i:0,label:'Easy'};
+  if(D<15) return {i:1,label:'Medium'};
+  if(D<35) return {i:2,label:'Hard'};
+  return {i:3,label:'Very hard'};
+}
+function shotSentence(s,cue){
+  const cut=Math.acos(Math.min(1,Math.max(-1,s.cosCut)));
+  const cutDeg=Math.round(cut/RAD);
+  const d=sub(s.B,cue);                       // sight line: cue ball -> object ball
+  const u=nrm(sub((s.kind==='bank'?s.bounce:s.P.aim),s.B));
+  const cutDir=crs(d,u)<0?'left':'right';     // y-down coords: negative cross = viewer's left
+  const contact=cutDir==='left'?'right':'left';
+  const full=Math.max(2,Math.round(100*(1-Math.sin(cut))));
+  const d1=(s.d1/12).toFixed(1), d2=(s.d2/12).toFixed(1);
+  let aimTxt;
+  if(cutDeg<5) aimTxt='Dead straight — aim through the centre of the ball.';
+  else aimTxt=`Cut it <b>${cutDeg}°</b> to the ${cutDir}: strike the <b>${contact} half</b>, about <b>${full}% full</b>.`;
+  const bankTxt=s.kind==='bank'?` off the <b>${s.rail} rail</b>`:'';
+  return `${aimTxt} <span class="cueb">Cue travels ${d1} ft</span> · object ball ${d2} ft${bankTxt} to the <b>${s.P.label}</b>.`;
+}
+
+/* ============================== image + canvas ============================== */
+const base=document.createElement('canvas');   // working copy of the photo
+const bctx=base.getContext('2d');
+const canvas=document.getElementById('photoCanvas');
+const ctx=canvas.getContext('2d');
+const diagram=document.getElementById('diagramCanvas');
+
+function loadImageFile(file){
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+    URL.revokeObjectURL(url);
+    setBaseFromImage(img);
+    resetScene();
+    setStep('corners');
+    toast('Now tap the 4 corner pockets, in order around the table');
+  };
+  img.onerror=()=>toast('Could not read that image — try another photo');
+  img.src=url;
+}
+function setBaseFromImage(img){
+  const cap=1600;
+  const k=Math.min(1,cap/Math.max(img.width,img.height));
+  base.width=Math.round(img.width*k);
+  base.height=Math.round(img.height*k);
+  bctx.drawImage(img,0,0,base.width,base.height);
+  canvas.width=base.width; canvas.height=base.height;
+  state.imgLoaded=true;
+}
+function resetScene(){
+  state.corners=[]; state.flip=false; state.H=state.Hinv=null;
+  state.balls=[]; state.shots=[]; state.selShot=0; state.shotErr=null;
+}
+
+function pickPt(e){
+  const r=canvas.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*canvas.width/r.width,
+          y:(e.clientY-r.top)*canvas.height/r.height};
+}
+function hitR(){
+  const r=canvas.getBoundingClientRect();
+  return 26*canvas.width/r.width;
+}
+function tab2img(p){return applyH(state.Hinv,p.x,p.y);}
+function img2tab(p){return applyH(state.H,p.x,p.y);}
+function clampTable(p){
+  return {x:Math.min(TW-BR,Math.max(BR,p.x)), y:Math.min(TH-BR,Math.max(BR,p.y))};
+}
+
+/* ---------- drawing: photo canvas ---------- */
+const BALL_STYLE={
+  cue:  {fill:'rgba(240,238,228,.85)',stroke:'#ffffff'},
+  mine: {fill:'rgba(111,183,216,.55)',stroke:'#8ecdea'},
+  theirs:{fill:'rgba(228,87,63,.5)',  stroke:'#ff8a73'},
+  eight:{fill:'rgba(10,10,10,.75)',   stroke:'#cccccc'},
+};
+function ballOutline(b){
+  const pts=[];
+  for(let i=0;i<22;i++){
+    const a=i/22*2*Math.PI;
+    pts.push(tab2img({x:b.x+BR*Math.cos(a),y:b.y+BR*Math.sin(a)}));
+  }
+  return pts;
+}
+function poly(c,pts,close){
+  c.beginPath();
+  pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));
+  if(close)c.closePath();
+}
+function haloLine(c,pts,color,w,dash){
+  c.save();
+  c.lineCap='round'; c.lineJoin='round';
+  c.setLineDash(dash||[]);
+  c.strokeStyle='rgba(0,0,0,.55)'; c.lineWidth=w+4; poly(c,pts); c.stroke();
+  c.strokeStyle=color; c.lineWidth=w; poly(c,pts); c.stroke();
+  c.restore();
+}
+function drawArrowHead(c,from,to,color,size){
+  const u=nrm(sub(to,from)), n={x:-u.y,y:u.x};
+  const p1=add(sub(to,scl(u,size)),scl(n,size*0.55));
+  const p2=sub(sub(to,scl(u,size)),scl(n,size*0.55));
+  c.save();
+  c.fillStyle=color;
+  c.beginPath();c.moveTo(to.x,to.y);c.lineTo(p1.x,p1.y);c.lineTo(p2.x,p2.y);c.closePath();c.fill();
+  c.restore();
+}
+function drawLoupe(c,x,y){
+  const R=Math.min(canvas.width,canvas.height)*0.14, mag=2.4;
+  let cy=y-R*1.7; if(cy-R<0) cy=y+R*1.7;
+  let cx=Math.min(canvas.width-R-4,Math.max(R+4,x));
+  c.save();
+  c.beginPath();c.arc(cx,cy,R,0,2*Math.PI);c.clip();
+  const s=R/mag;
+  c.drawImage(base,x-s,y-s,2*s,2*s,cx-R,cy-R,2*R,2*R);
+  c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=2;
+  c.beginPath();c.moveTo(cx-12,cy);c.lineTo(cx+12,cy);c.moveTo(cx,cy-12);c.lineTo(cx,cy+12);c.stroke();
+  c.restore();
+  c.strokeStyle='#ede7da';c.lineWidth=3;
+  c.beginPath();c.arc(cx,cy,R,0,2*Math.PI);c.stroke();
+}
+function lw(k){ // line widths that hold up on any photo resolution
+  return Math.max(1.5,canvas.width/480)*k;
+}
+function render(){
+  if(!state.imgLoaded) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(base,0,0);
+  if(state.step==='shots'){
+    ctx.fillStyle='rgba(6,10,8,.34)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  if(state.step==='corners') renderCorners();
+  if(state.step==='balls'||state.step==='shots') renderBalls();
+  if(state.step==='shots') renderShotOverlay();
+  if(drag&&drag.loupe) drawLoupe(ctx,drag.loupe.x,drag.loupe.y);
+}
+function renderCorners(){
+  const c=state.corners;
+  if(c.length>1){
+    haloLine(ctx,c.concat(c.length===4?[c[0]]:[]),'rgba(31,162,107,.95)',lw(1.2),[10,8]);
+  }
+  if(state.H){
+    for(const p of pockets()){
+      const q=tab2img(p);
+      ctx.save();
+      ctx.strokeStyle=p.type==='side'?'#f5a623':'#1fa26b';
+      ctx.lineWidth=lw(1.6);
+      ctx.beginPath();ctx.arc(q.x,q.y,lw(7),0,2*Math.PI);ctx.stroke();
+      ctx.restore();
+    }
+  }
+  c.forEach((p,i)=>{
+    ctx.save();
+    ctx.fillStyle='#1fa26b';ctx.strokeStyle='#07130d';ctx.lineWidth=lw(1);
+    ctx.beginPath();ctx.arc(p.x,p.y,lw(6),0,2*Math.PI);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#07130d';
+    ctx.font=`700 ${Math.round(lw(6.5))}px Barlow, sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(i+1),p.x,p.y);
+    ctx.restore();
+  });
+}
+function renderBalls(){
+  if(!state.Hinv) return;
+  for(const b of state.balls){
+    const st=BALL_STYLE[b.type], pts=ballOutline(b);
+    ctx.save();
+    poly(ctx,pts,true);
+    ctx.fillStyle=st.fill;ctx.fill();
+    ctx.strokeStyle=st.stroke;ctx.lineWidth=lw(1.3);ctx.stroke();
+    if(b.type==='eight'){
+      const q=tab2img(b);
+      ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(lw(7))}px Barlow, sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('8',q.x,q.y);
+    }
+    if(state.step==='shots'&&b._label&&b.type==='mine'){
+      const q=tab2img(b);
+      ctx.fillStyle='#07130d';ctx.font=`700 ${Math.round(lw(7))}px Barlow, sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b._label,q.x,q.y);
+    }
+    ctx.restore();
+  }
+}
+function renderShotOverlay(){
+  const s=state.shots[state.selShot];
+  if(!s||!state.Hinv) return;
+  const cue=state.balls.find(b=>b.type==='cue');
+  if(!cue) return;
+  const sampled=(a,b)=>{
+    const pts=[];
+    for(let i=0;i<=14;i++) pts.push(tab2img(add(a,scl(sub(b,a),i/14))));
+    return pts;
+  };
+  // object-ball path (amber), possibly two legs for a bank
+  for(let i=0;i<s.path.length-1;i++){
+    const seg=sampled(s.path[i],s.path[i+1]);
+    haloLine(ctx,seg,'#f5a623',lw(2.2));
+    if(i===s.path.length-2) drawArrowHead(ctx,seg[seg.length-2],seg[seg.length-1],'#f5a623',lw(9));
+  }
+  // cue path (chalk, dashed) + ghost ball
+  haloLine(ctx,sampled(cue,s.G),'#8ecdea',lw(2),[12,9]);
+  const gpts=[];
+  for(let i=0;i<22;i++){
+    const a=i/22*2*Math.PI;
+    gpts.push(tab2img({x:s.G.x+BR*Math.cos(a),y:s.G.y+BR*Math.sin(a)}));
+  }
+  ctx.save();
+  ctx.setLineDash([7,6]);ctx.strokeStyle='#dff1fb';ctx.lineWidth=lw(1.6);
+  poly(ctx,gpts,true);ctx.stroke();
+  ctx.restore();
+  // pocket ring
+  const q=tab2img(s.P);
+  ctx.save();
+  ctx.strokeStyle='#f5a623';ctx.lineWidth=lw(2.4);
+  ctx.beginPath();ctx.arc(q.x,q.y,lw(11),0,2*Math.PI);ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- drawing: top-down diagram ---------- */
+function renderDiagram(){
+  const shell=document.getElementById('diagramShell');
+  const cssW=shell.clientWidth||320;
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const M=Math.round(cssW*0.055);
+  const k=(cssW-2*M)/TW;
+  const cssH=Math.round(TH*k+2*M);
+  diagram.width=cssW*dpr; diagram.height=cssH*dpr;
+  diagram.style.height=cssH+'px';
+  const c=diagram.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  const X=x=>M+x*k, Y=y=>M+y*k;
+  // rails + felt
+  c.fillStyle='#3a2a1c';c.fillRect(0,0,cssW,cssH);
+  const g=c.createLinearGradient(0,M,0,cssH-M);
+  g.addColorStop(0,'#12684a'); g.addColorStop(1,'#0d4d33');
+  c.fillStyle=g;c.fillRect(M,M,TW*k,TH*k);
+  c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=1;
+  c.strokeRect(M,M,TW*k,TH*k);
+  // head string
+  c.save();c.setLineDash([4,5]);c.strokeStyle='rgba(237,231,218,.18)';
+  c.beginPath();c.moveTo(X(TW*0.75),Y(0));c.lineTo(X(TW*0.75),Y(TH));c.stroke();c.restore();
+  // pockets
+  const s=state.shots[state.selShot];
+  for(const p of pockets()){
+    c.fillStyle='#080808';
+    c.beginPath();c.arc(X(p.x),Y(p.y),Math.max(7,2.4*BR*k*0.9),0,2*Math.PI);c.fill();
+    if(s&&s.P.id===p.id){
+      c.strokeStyle='#f5a623';c.lineWidth=2.5;
+      c.beginPath();c.arc(X(p.x),Y(p.y),Math.max(9,2.4*BR*k*0.9+3),0,2*Math.PI);c.stroke();
+    }
+  }
+  const cue=state.balls.find(b=>b.type==='cue');
+  // shot lines under the balls
+  if(s&&cue){
+    c.lineCap='round';
+    for(let i=0;i<s.path.length-1;i++){
+      c.strokeStyle='#f5a623';c.lineWidth=3;
+      c.beginPath();c.moveTo(X(s.path[i].x),Y(s.path[i].y));c.lineTo(X(s.path[i+1].x),Y(s.path[i+1].y));c.stroke();
+    }
+    drawArrowHead(c,{x:X(s.path[s.path.length-2].x),y:Y(s.path[s.path.length-2].y)},
+                    {x:X(s.path[s.path.length-1].x),y:Y(s.path[s.path.length-1].y)},'#f5a623',8);
+    c.save();c.setLineDash([8,6]);c.strokeStyle='#8ecdea';c.lineWidth=2.4;
+    c.beginPath();c.moveTo(X(cue.x),Y(cue.y));c.lineTo(X(s.G.x),Y(s.G.y));c.stroke();c.restore();
+    c.save();c.setLineDash([4,4]);c.strokeStyle='#dff1fb';c.lineWidth=1.6;
+    c.beginPath();c.arc(X(s.G.x),Y(s.G.y),BR*k,0,2*Math.PI);c.stroke();c.restore();
+    if(s.bounce){
+      c.fillStyle='#f5a623';
+      c.beginPath();c.arc(X(s.bounce.x),Y(s.bounce.y),3.5,0,2*Math.PI);c.fill();
+    }
+  }
+  // balls
+  const rr=Math.max(4.5,BR*k);
+  const DCOL={cue:'#f0eee4',mine:'#5aa9d6',theirs:'#e4573f',eight:'#141414'};
+  for(const b of state.balls){
+    c.save();
+    c.fillStyle='rgba(0,0,0,.3)';
+    c.beginPath();c.arc(X(b.x)+1.2,Y(b.y)+1.6,rr,0,2*Math.PI);c.fill();
+    c.fillStyle=DCOL[b.type];
+    c.beginPath();c.arc(X(b.x),Y(b.y),rr,0,2*Math.PI);c.fill();
+    c.strokeStyle=b.type==='eight'?'#9aa8a0':'rgba(0,0,0,.4)';c.lineWidth=1;
+    c.stroke();
+    if(b.type==='eight'||(b._label&&b.type==='mine'&&state.shots.length)){
+      c.fillStyle=b.type==='eight'?'#ede7da':'#07130d';
+      c.font=`700 ${Math.max(8,rr)}px Barlow, sans-serif`;
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText(b.type==='eight'?'8':b._label,X(b.x),Y(b.y));
+    }
+    if(s&&b===s.B){
+      c.strokeStyle='#f5a623';c.lineWidth=2;
+      c.beginPath();c.arc(X(b.x),Y(b.y),rr+3,0,2*Math.PI);c.stroke();
+    }
+    c.restore();
+  }
+  // cut-angle label near the ghost ball
+  if(s&&cue){
+    const cutDeg=Math.round(Math.acos(Math.min(1,Math.max(-1,s.cosCut)))/RAD);
+    c.save();
+    c.fillStyle='rgba(7,19,13,.75)';
+    const tx=X(s.G.x), ty=Y(s.G.y)-BR*k-14;
+    c.font='700 12px Barlow, sans-serif';
+    const w=c.measureText(cutDeg+'° cut').width+12;
+    c.beginPath();c.roundRect(tx-w/2,ty-10,w,20,6);c.fill();
+    c.fillStyle='#dff1fb';c.textAlign='center';c.textBaseline='middle';
+    c.fillText(cutDeg+'° cut',tx,ty);
+    c.restore();
+  }
+}
+
+/* ============================== interactions ============================== */
+let drag=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(!state.imgLoaded) return;
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  const p=pickPt(e);
+  if(state.step==='corners'){
+    let best=-1,bd=hitR();
+    state.corners.forEach((c,i)=>{const d=Math.hypot(c.x-p.x,c.y-p.y);if(d<bd){bd=d;best=i;}});
+    if(best>=0){drag={kind:'corner',idx:best,loupe:p};}
+    else if(state.corners.length<4){
+      state.corners.push({x:p.x,y:p.y});
+      drag={kind:'corner',idx:state.corners.length-1,loupe:p};
+    }
+    render();
+  }else if(state.step==='balls'){
+    if(!state.H){toast('Set the table corners first');return;}
+    let best=null,bd=hitR();
+    for(const b of state.balls){
+      const q=tab2img(b), d=Math.hypot(q.x-p.x,q.y-p.y);
+      if(d<bd){bd=d;best=b;}
+    }
+    if(best){
+      drag={kind:'ball',ball:best,moved:false,loupe:p};
+    }else if(state.mode!=='erase'){
+      const t=clampTable(img2tab(p));
+      const b=placeBall(t,state.mode);
+      drag={kind:'ball',ball:b,moved:true,loupe:p};
+    }
+    render();
+  }
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  e.preventDefault();
+  const p=pickPt(e);
+  drag.loupe=p;
+  if(drag.kind==='corner'){
+    state.corners[drag.idx]={x:p.x,y:p.y};
+    if(state.corners.length===4) updateHomography();
+  }else{
+    drag.moved=true;
+    const t=clampTable(img2tab(p));
+    drag.ball.x=t.x; drag.ball.y=t.y;
+  }
+  render();
+});
+function endDrag(e){
+  if(!drag) return;
+  if(drag.kind==='corner'){
+    if(state.corners.length===4){updateHomography();}
+  }else if(drag.kind==='ball'&&!drag.moved){
+    if(state.mode==='erase'){
+      state.balls=state.balls.filter(b=>b!==drag.ball);
+    }else if(drag.ball.type!==state.mode){
+      retype(drag.ball,state.mode);
+    }
+  }
+  drag=null;
+  updateUI(); render();
+}
+canvas.addEventListener('pointerup',endDrag);
+canvas.addEventListener('pointercancel',()=>{drag=null;render();});
+
+function placeBall(t,type){
+  if(type==='cue'||type==='eight'){
+    const ex=state.balls.find(b=>b.type===type);
+    if(ex){ex.x=t.x;ex.y=t.y;return ex;}
+  }
+  const b={x:t.x,y:t.y,type};
+  state.balls.push(b);
+  return b;
+}
+function retype(ball,type){
+  if(type==='cue'||type==='eight'){
+    const ex=state.balls.find(b=>b.type===type&&b!==ball);
+    if(ex) ex.type='theirs';
+  }
+  ball.type=type;
+}
+
+/* ============================== auto-detect ============================== */
+function autoDetect(){
+  if(!state.Hinv){toast('Set the table corners first');return;}
+  try{
+    const PPI=4, RW=Math.round(TW*PPI), RH=Math.round(TH*PPI);
+    const src=bctx.getImageData(0,0,base.width,base.height);
+    const sd=src.data, sw=base.width, sh=base.height;
+    const rect=new Uint8ClampedArray(RW*RH*3);
+    for(let y=0;y<RH;y++){
+      for(let x=0;x<RW;x++){
+        const q=tab2img({x:(x+0.5)/PPI,y:(y+0.5)/PPI});
+        const sx=Math.round(q.x),sy=Math.round(q.y);
+        const o=(y*RW+x)*3;
+        if(sx>=0&&sy>=0&&sx<sw&&sy<sh){
+          const si=(sy*sw+sx)*4;
+          rect[o]=sd[si];rect[o+1]=sd[si+1];rect[o+2]=sd[si+2];
+        }
+      }
+    }
+    // cloth colour = per-channel median
+    const hist=[new Uint32Array(256),new Uint32Array(256),new Uint32Array(256)];
+    for(let i=0;i<RW*RH;i++){hist[0][rect[i*3]]++;hist[1][rect[i*3+1]]++;hist[2][rect[i*3+2]]++;}
+    const med=ch=>{let n=0;for(let v=0;v<256;v++){n+=hist[ch][v];if(n>=RW*RH/2)return v;}return 128;};
+    const cr=med(0),cg=med(1),cb=med(2);
+    // mask + blobs
+    const mask=new Uint8Array(RW*RH);
+    for(let i=0;i<RW*RH;i++){
+      const d=Math.abs(rect[i*3]-cr)+Math.abs(rect[i*3+1]-cg)+Math.abs(rect[i*3+2]-cb);
+      mask[i]=d>78?1:0;
+    }
+    const seen=new Uint8Array(RW*RH), qx=new Int32Array(RW*RH), qy=new Int32Array(RW*RH);
+    const found=[];
+    for(let y0=1;y0<RH-1;y0++)for(let x0=1;x0<RW-1;x0++){
+      const i0=y0*RW+x0;
+      if(!mask[i0]||seen[i0]) continue;
+      let head=0,tail=0;qx[tail]=x0;qy[tail]=y0;tail++;seen[i0]=1;
+      let n=0,sx=0,sy=0,minx=x0,maxx=x0,miny=y0,maxy=y0,edge=false;
+      const pix=[];
+      while(head<tail){
+        const x=qx[head],y=qy[head];head++;
+        n++;sx+=x;sy+=y;pix.push(y*RW+x);
+        if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
+        if(x<=0||y<=0||x>=RW-1||y>=RH-1){edge=true;continue;}
+        const nb=[[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+        for(const [ax,ay] of nb){
+          const ai=ay*RW+ax;
+          if(mask[ai]&&!seen[ai]){seen[ai]=1;qx[tail]=ax;qy[tail]=ay;tail++;}
+        }
+      }
+      const bw=maxx-minx+1,bh=maxy-miny+1;
+      const areaLo=Math.PI*Math.pow(BR*PPI,2)*0.35, areaHi=Math.PI*Math.pow(BR*PPI,2)*5;
+      if(edge||n<areaLo||n>areaHi) continue;
+      if(Math.max(bw,bh)/Math.min(bw,bh)>2.3||Math.max(bw,bh)>BR*PPI*6) continue;
+      // classify on the blob's brightest 40% of pixels — the ball's lit face,
+      // not its shaded rim or the shadow it merges with
+      pix.sort((a,b)=>(rect[b*3]+rect[b*3+1]+rect[b*3+2])-(rect[a*3]+rect[a*3+1]+rect[a*3+2]));
+      const top=Math.max(4,Math.floor(pix.length*0.4));
+      let tr=0,tg=0,tb=0;
+      for(let i2=0;i2<top;i2++){const ii=pix[i2]*3;tr+=rect[ii];tg+=rect[ii+1];tb+=rect[ii+2];}
+      tr/=top;tg/=top;tb/=top;
+      found.push({x:(sx/n)/PPI,y:(sy/n)/PPI,r:tr,g:tg,b:tb,n});
+    }
+    // classify
+    let added=0;
+    let brightest=null;
+    for(const f of found){
+      f.bri=(f.r+f.g+f.b)/3;
+      f.sat=Math.max(f.r,f.g,f.b)-Math.min(f.r,f.g,f.b);
+      if(f.bri>150&&f.sat<70&&(!brightest||f.bri>brightest.bri)) brightest=f;
+    }
+    for(const f of found){
+      const t=clampTable(f);
+      if(state.balls.some(b=>Math.hypot(b.x-t.x,b.y-t.y)<2.6*BR)) continue;
+      let type='theirs';
+      if(f===brightest&&!state.balls.some(b=>b.type==='cue')) type='cue';
+      else if(f.bri<90&&f.sat<60&&!state.balls.some(b=>b.type==='eight')) type='eight';
+      state.balls.push({x:t.x,y:t.y,type});
+      added++;
+    }
+    if(added){
+      toast(`Found ${added} ball${added>1?'s':''} — now tap yours with “My balls” selected`);
+      state.mode='mine';
+    }else{
+      toast('Nothing new detected — tap the balls in by hand');
+    }
+    updateUI(); render();
+  }catch(err){
+    toast('Auto-detect failed on this photo — tap the balls in by hand');
+  }
+}
+
+/* ============================== demo scene ============================== */
+function loadDemo(){
+  applyTableSize('us7',true);
+  const W=1280,Hh=960;
+  base.width=W;base.height=Hh;canvas.width=W;canvas.height=Hh;
+  const dc=bctx;
+  const bg=dc.createLinearGradient(0,0,0,Hh);
+  bg.addColorStop(0,'#241d17');bg.addColorStop(1,'#171310');
+  dc.fillStyle=bg;dc.fillRect(0,0,W,Hh);
+  const corners=[{x:300,y:295},{x:1005,y:308},{x:1175,y:815},{x:110,y:790}];
+  const Ht=homography([{x:0,y:0},{x:TW,y:0},{x:TW,y:TH},{x:0,y:TH}],corners);
+  const P=(x,y)=>applyH(Ht,x,y);
+  // wooden rail apron
+  const ap=[P(-6,-6),P(TW+6,-6),P(TW+6,TH+6),P(-6,TH+6)];
+  dc.fillStyle='#4a3421';poly(dc,ap,true);dc.fill();
+  // felt
+  const fg=dc.createLinearGradient(0,250,0,850);
+  fg.addColorStop(0,'#15754e');fg.addColorStop(1,'#0c5236');
+  dc.fillStyle=fg;poly(dc,corners,true);dc.fill();
+  // pockets
+  for(const p of pockets()){
+    const q=P(p.x,p.y);
+    dc.fillStyle='#060606';
+    dc.beginPath();dc.ellipse(q.x,q.y,26,18,0,0,2*Math.PI);dc.fill();
+  }
+  const demoBalls=[
+    {x:24,y:27,type:'cue',  col:'#f2eee4'},
+    {x:52,y:12,type:'mine', col:'#e0b13a'},
+    {x:64,y:26,type:'mine', col:'#8e44ad'},
+    {x:47,y:31,type:'mine', col:'#c0392b'},
+    {x:40,y:10,type:'theirs',col:'#2e6db0'},
+    {x:69,y:9, type:'theirs',col:'#c96a2b'},
+    {x:44,y:21,type:'theirs',col:'#3e7c4f'},
+    {x:71,y:33,type:'eight',col:'#141414'},
+  ];
+  for(const b of demoBalls){
+    const q=P(b.x,b.y), qe=P(b.x+BR,b.y);
+    const r=Math.hypot(qe.x-q.x,qe.y-q.y);
+    dc.fillStyle='rgba(0,0,0,.35)';
+    dc.beginPath();dc.ellipse(q.x+r*0.25,q.y+r*0.45,r*1.05,r*0.6,0,0,2*Math.PI);dc.fill();
+    const g2=dc.createRadialGradient(q.x-r*0.35,q.y-r*0.45,r*0.15,q.x,q.y,r*1.15);
+    g2.addColorStop(0,'#ffffff');g2.addColorStop(0.25,b.col);g2.addColorStop(1,'#000000');
+    dc.fillStyle=g2;
+    dc.beginPath();dc.arc(q.x,q.y-r*0.35,r,0,2*Math.PI);dc.fill();
+  }
+  state.imgLoaded=true;
+  resetScene();
+  state.corners=corners.map(c=>({...c}));
+  updateHomography();
+  state.balls=demoBalls.map(b=>({x:b.x,y:b.y,type:b.type}));
+  setStep('balls');
+  toast('Demo loaded — blue rings are “your” balls. Tap Best shot →');
+}
+
+/* ============================== UI plumbing ============================== */
+const HINTS={
+  photo:'Snap the table mid-game and CueSight will find your highest-percentage shot.',
+  corners:'Tap the <b>4 corner pockets in order</b> around the table. Drag any marker to fine-tune — a loupe zooms in. If the orange side-pocket rings sit on the wrong rails, tap <b>Swap</b>.',
+  balls:'Pick a type below, then <b>tap where each ball touches the felt</b>. Tap a placed ball to re-type it, drag it to nudge, or use auto-detect.',
+  shots:'Amber is the object ball’s path; dashed chalk-blue is your cue ball to the <b>ghost ball</b> — send the cue’s centre there. Tap a card to compare options.',
+};
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._h);
+  t._h=setTimeout(()=>t.classList.remove('show'),3400);
+}
+function stepReady(step){
+  if(step==='photo') return true;
+  if(step==='corners') return state.imgLoaded;
+  if(step==='balls') return state.imgLoaded&&state.corners.length===4;
+  if(step==='shots') return state.imgLoaded&&state.corners.length===4;
+  return false;
+}
+function setStep(step){
+  if(!stepReady(step)){
+    if(step!=='photo'&&!state.imgLoaded) toast('Add a photo first');
+    else if(step==='balls'||step==='shots') toast('Tap all 4 corner pockets first');
+    return;
+  }
+  state.step=step;
+  if(step==='shots') runAnalysis();
+  updateUI(); render();
+  if(step==='shots') requestAnimationFrame(renderDiagram);
+}
+function runAnalysis(){
+  const res=computeShots();
+  state.shotErr=res.error||null;
+  state.shots=res.shots||[];
+  state.on8=!!res.on8;
+  state.selShot=0;
+}
+function updateUI(){
+  document.querySelectorAll('#stepsNav .step').forEach(el=>{
+    const s=el.dataset.step;
+    el.classList.toggle('current',state.step===s);
+    el.classList.toggle('locked',!stepReady(s));
+    el.classList.toggle('done',state.step!==s&&(
+      (s==='photo'&&state.imgLoaded)||
+      (s==='corners'&&state.corners.length===4)||
+      (s==='balls'&&state.balls.length>0)));
+  });
+  document.getElementById('hint').innerHTML=HINTS[state.step]||'';
+  document.getElementById('introPanel').style.display=state.step==='photo'?'':'none';
+  document.getElementById('workArea').style.display=state.step==='photo'?'none':'block';
+  document.getElementById('cornersBar').style.display=state.step==='corners'?'flex':'none';
+  document.getElementById('ballsBar').style.display=state.step==='balls'?'flex':'none';
+  document.getElementById('shotsArea').style.display=state.step==='shots'?'block':'none';
+  document.getElementById('toBallsBtn').disabled=state.corners.length!==4;
+  document.getElementById('swapBtn').style.display=state.corners.length===4?'':'none';
+  const counts={cue:0,mine:0,theirs:0,eight:0};
+  state.balls.forEach(b=>counts[b.type]++);
+  document.querySelectorAll('#ballsBar .chip[data-mode]').forEach(el=>{
+    el.classList.toggle('on',state.mode===el.dataset.mode);
+  });
+  const lbl={cue:'◯ Cue ball',mine:`● My balls${counts.mine?` (${counts.mine})`:''}`,
+             theirs:`● Theirs${counts.theirs?` (${counts.theirs})`:''}`,eight:'8-ball',erase:'✕ Remove'};
+  document.querySelectorAll('#ballsBar .chip[data-mode]').forEach(el=>{el.textContent=lbl[el.dataset.mode];});
+  if(state.step==='shots') renderShotsPanel();
+}
+function renderShotsPanel(){
+  const g=document.getElementById('guidance');
+  const cards=document.getElementById('cards');
+  cards.innerHTML='';
+  if(state.shotErr==='no-cue'){
+    g.innerHTML='<div class="lede">One thing missing</div>Mark the <b>cue ball</b> on the Balls step, then come back.';
+    return;
+  }
+  if(state.shotErr==='no-targets'){
+    g.innerHTML='<div class="lede">One thing missing</div>Mark at least one of <b>your balls</b> — or the 8-ball if you’re on it.';
+    return;
+  }
+  if(!state.shots.length){
+    g.innerHTML=`<div class="lede">No clean pot available</div>`+
+      `${state.blockedCount?`${state.blockedCount} line${state.blockedCount>1?'s are':' is'} blocked. `:''}`+
+      `Play <b>safe</b>: roll the cue ball behind a cluster or leave it frozen to a cushion, keeping your opponent off their ball.`;
+    return;
+  }
+  const cue=state.balls.find(b=>b.type==='cue');
+  const s=state.shots[state.selShot];
+  const dd=difficulty(s.D);
+  const name=state.on8?'the 8-ball':`ball ${s.B._label}`;
+  g.innerHTML=`<div class="lede">${state.selShot===0?'Best shot':'Option '+(state.selShot+1)} · ${dd.label}${state.on8?' · you’re on the 8':''}</div>`+
+    `Pot <b>${name}</b>: ${shotSentence(s,cue)}`;
+  state.shots.forEach((sh,i)=>{
+    const d=difficulty(sh.D);
+    const cutDeg=Math.round(Math.acos(Math.min(1,Math.max(-1,sh.cosCut)))/RAD);
+    const el=document.createElement('div');
+    el.className='card'+(i===state.selShot?' sel':'');
+    el.tabIndex=0;
+    el.innerHTML=`<div class="top"><span class="rank">#${i+1}</span>`+
+      `<span class="name">${sh.B._label==='8'?'8-ball':'Ball '+sh.B._label} → ${sh.P.id}</span></div>`+
+      `<div class="meta">${sh.P.label}</div>`+
+      `<div class="meta" style="margin:4px 0 6px">cut ${cutDeg}° · cue ${(sh.d1/12).toFixed(1)}ft · obj ${(sh.d2/12).toFixed(1)}ft</div>`+
+      `<span class="badge ${sh.kind}">${sh.kind==='bank'?'bank · '+sh.rail+' rail':'direct'}</span> `+
+      `<span class="diff d${d.i}">${d.label}</span>`;
+    const pick=()=>{state.selShot=i;updateUI();render();renderDiagram();};
+    el.addEventListener('click',pick);
+    el.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();pick();}});
+    cards.appendChild(el);
+  });
+}
+function applyTableSize(key,skipRescale){
+  const t=TABLE_SIZES[key]||TABLE_SIZES.us7;
+  const ox=TW,oy=TH;
+  TW=t.L;TH=t.W;BR=t.R;
+  document.getElementById('tableSize').value=key;
+  if(!skipRescale&&state.balls.length){
+    state.balls.forEach(b=>{b.x*=TW/ox;b.y*=TH/oy;});
+  }
+  updateHomography();
+  try{localStorage.setItem('cuesight-table',key);}catch(e){}
+}
+
+/* wiring */
+document.getElementById('cameraBtn').addEventListener('click',()=>document.getElementById('cameraInput').click());
+document.getElementById('uploadBtn').addEventListener('click',()=>document.getElementById('uploadInput').click());
+for(const id of ['cameraInput','uploadInput']){
+  document.getElementById(id).addEventListener('change',e=>{
+    if(e.target.files&&e.target.files[0]) loadImageFile(e.target.files[0]);
+    e.target.value='';
+  });
+}
+document.getElementById('demoBtn').addEventListener('click',loadDemo);
+document.getElementById('newPhotoBtn').addEventListener('click',()=>{
+  if(state.imgLoaded&&!confirm('Start over with a new photo?')) return;
+  state.imgLoaded=false;resetScene();setStep('photo');
+});
+document.querySelectorAll('#stepsNav .step').forEach(el=>{
+  el.addEventListener('click',()=>setStep(el.dataset.step));
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setStep(el.dataset.step);}});
+});
+document.getElementById('tableSize').addEventListener('change',e=>{applyTableSize(e.target.value);render();});
+document.getElementById('swapBtn').addEventListener('click',()=>{state.flip=!state.flip;updateHomography();render();});
+document.getElementById('resetCornersBtn').addEventListener('click',()=>{
+  state.corners=[];state.H=state.Hinv=null;updateUI();render();
+});
+document.getElementById('toBallsBtn').addEventListener('click',()=>setStep('balls'));
+document.getElementById('toShotsBtn').addEventListener('click',()=>setStep('shots'));
+document.getElementById('backToBallsBtn').addEventListener('click',()=>setStep('balls'));
+document.getElementById('reanalyzeBtn').addEventListener('click',()=>{runAnalysis();updateUI();render();renderDiagram();});
+document.querySelectorAll('#ballsBar .chip[data-mode]').forEach(el=>{
+  el.addEventListener('click',()=>{state.mode=el.dataset.mode;updateUI();});
+});
+document.getElementById('autoBtn').addEventListener('click',autoDetect);
+document.getElementById('clearBallsBtn').addEventListener('click',()=>{state.balls=[];updateUI();render();});
+window.addEventListener('resize',()=>{if(state.step==='shots')renderDiagram();});
+
+try{
+  const saved=localStorage.getItem('cuesight-table');
+  if(saved&&TABLE_SIZES[saved]) applyTableSize(saved,true);
+}catch(e){}
+updateUI();
+
+/* test hooks */
+window.__cs={state,computeShots,homography,applyH,loadDemo,setStep,updateHomography,
+  get TW(){return TW},get TH(){return TH},get BR(){return BR}};
+</script>
+</body>
+</html>
