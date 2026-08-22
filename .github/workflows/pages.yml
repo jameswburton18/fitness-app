@@ -19,12 +19,18 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# The auto-created github-pages environment only allows the Sturdy branch to
+# deploy; declaring `environment:` here gets this branch's jobs rejected before
+# they start. Deploying without the declaration still goes through the Pages
+# API. If this ever starts failing at the deploy step, either add this branch
+# (or a claude/* pattern) under Settings → Environments → github-pages →
+# Deployment branches, and restore the environment block:
+#   environment:
+#     name: github-pages
+#     url: ${{ steps.deployment.outputs.page_url }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out Sturdy (site root)
         uses: actions/checkout@v4
