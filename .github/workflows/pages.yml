@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages (Sturdy + CueSight)
+
+# One repo = one Pages site, and Sturdy (the fitness branch) owns the root.
+# This workflow composes both apps: Sturdy at /, CueSight at /cuesight/.
+# Note: a push to the Sturdy branch runs THAT branch's workflow, which deploys
+# only Sturdy — re-run this one (workflow_dispatch) to restore /cuesight/.
+
+on:
+  push:
+    branches: [claude/pool-shot-analyzer-bq49di]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out Sturdy (site root)
+        uses: actions/checkout@v4
+        with:
+          ref: claude/personal-android-fitness-app-juilwq
+          path: site
+      - name: Check out CueSight (/cuesight)
+        uses: actions/checkout@v4
+        with:
+          path: site/cuesight
+      - name: Drop repo internals from the site
+        run: rm -rf site/.git site/.github site/cuesight/.git site/cuesight/.github
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

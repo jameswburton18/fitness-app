@@ -8,6 +8,25 @@ It's a single self-contained HTML file — no build, no server, no dependencies.
 Open `index.html` in any browser (it's designed for a phone at the table) or
 serve it from any static host.
 
+## Install on your phone
+
+CueSight deploys to GitHub Pages as an installable PWA (offline-capable, with
+its own home-screen icon), sharing this repo's Pages site with the Sturdy
+fitness app:
+
+- **CueSight**: https://jameswburton18.github.io/fitness-app/cuesight/
+- Sturdy stays at the site root: https://jameswburton18.github.io/fitness-app/
+
+Open the URL on your phone, then use the browser menu → **Add to Home
+screen** (Android/Chrome offers "Install app"). After the first visit it works
+offline — handy in pool halls with bad signal.
+
+One quirk of sharing the Pages site: a push to the Sturdy branch runs *that*
+branch's deploy workflow, which publishes only Sturdy and drops `/cuesight/`.
+If that happens, re-run the "Deploy to GitHub Pages (Sturdy + CueSight)"
+workflow from the Actions tab — it composes both apps and is also triggered
+by any push to this branch.
+
 ## How it works
 
 1. **Photo** — take a photo with all six pockets in frame, or pick one from

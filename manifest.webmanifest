@@ -1,0 +1,14 @@
+{
+  "name": "CueSight",
+  "short_name": "CueSight",
+  "description": "Photograph your pool table mid-game and get the best shot, with aiming lines drawn on your photo.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101614",
+  "theme_color": "#101614",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
