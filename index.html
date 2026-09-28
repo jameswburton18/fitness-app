@@ -215,7 +215,7 @@ summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
 
 .p-stage{
   --stage:var(--bg2);
-  position:relative; flex:1 1 auto; min-height:170px; max-height:430px; border-radius:22px;
+  position:relative; flex:1 1 auto; min-height:170px; border-radius:22px;
   background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 7%, var(--bg2)) 0%, var(--bg2) 60%);
   border:1px solid var(--line); overflow:hidden; transition:border-color .3s;
 }
@@ -389,9 +389,9 @@ nav button.on svg{transform:translateY(-1px)}
 .today-hero #start-btn{position:relative; overflow:hidden}
 .today-hero #start-btn::after{content:''; position:absolute; inset:0; background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); transform:translateX(-100%); animation:shine 3.2s 1s ease-in-out infinite}
 @keyframes shine{0%{transform:translateX(-100%)} 40%,100%{transform:translateX(100%)}}
-.hero-fig{--stage:transparent; height:120px; margin:4px -6px 8px; position:relative}
+.hero-fig{--stage:var(--bg2); height:132px; margin:-4px -4px 12px; position:relative}
 .hero-fig .p-fig{position:absolute; inset:0}
-.hero-fig .fig .fh{fill:color-mix(in srgb, var(--accent) 6%, var(--bg2))}
+.hero-fig .fig-ground{stroke:transparent}
 @media (prefers-reduced-motion:reduce){ .burst{display:none} }
 
 /* ============ v2 additions ============ */
@@ -491,6 +491,7 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
       <h2 id="today-title"></h2>
       <div class="meta" id="today-meta"></div>
       <div class="chips" id="today-chips"></div>
+      <div class="hero-fig" id="hero-fig" hidden><div class="p-fig" id="hero-fig-in"></div></div>
       <div id="today-action"></div>
       <details class="preview" id="today-preview"></details>
     </div>
@@ -1085,6 +1086,7 @@ function blockWeek(){ return blockStart ? Math.floor(Math.max(0,daysBetween(bloc
 function lastTest(){ return tests.length ? tests[tests.length-1] : null; }
 function benchDue(){ const t=lastTest(); return !t || daysBetween(t.d, todayISO())>=14; }
 
+let heroStage=null;
 function renderToday(){
   const now = new Date();
   $('#hdr-date').textContent = now.toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short'});
@@ -1107,6 +1109,18 @@ function renderToday(){
   $('#today-meta').textContent = (sid==='rest' ? '' : '~'+estMins(sid)+' min · ') + s.desc;
   $('#today-chips').innerHTML = (s.focus||[]).map(f=>'<span class="chip">'+esc(f)+'</span>').join('');
   $('#today-chips').style.display = (s.focus&&s.focus.length) ? '' : 'none';
+
+  // headline move: the first ladder rung in today's session, animating in the hero
+  const hf=$('#hero-fig');
+  const lead = (s.blocks||[]).find(b=>b.slot) || (s.blocks||[]).find(b=>b.drill);
+  const leadName = lead ? blockDef(lead).n : null;
+  const showHero = !!(leadName && window.Figure && window.MOVES && MOVES[leadName] && !did);
+  hf.hidden = !showHero;
+  if(showHero){
+    if(!heroStage) heroStage=Figure.Stage($('#hero-fig-in'), {aspect:3});
+    if(heroStage._name!==leadName){ heroStage.resize(stageAspect($('#hero-fig-in'))); heroStage.set(MOVES[leadName]); heroStage._name=leadName; }
+    if($('#scr-today').classList.contains('on') && !$('#player').classList.contains('on')) heroStage.play(); else heroStage.pause();
+  } else if(heroStage) heroStage.pause();
 
   const act = $('#today-action');
   if(sid==='rest'){
@@ -1502,6 +1516,7 @@ async function startSession(sid){
   const built=buildSteps(sid);
   if(!built.steps.length) return;
   sessionId=sid; steps=built.steps; usedSlots=built.slots; stepIx=0; paused=false; sessionStart=Date.now(); setsDone=0;
+  if(heroStage) heroStage.pause();
   $('#p-sess').textContent = SESSIONS[sid].title;
   buildSegs();
   renderSound();

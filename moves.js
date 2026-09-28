@@ -1053,3 +1053,74 @@ M['Half-kneel hip flexor stretch'] = {
   seq:[['start',2],['fwd',2.5],['fwd',1.5]],
 };
 })(window.MOVES, window.POSE);
+
+/* ---- fix1: clearer supine twist, child’s pose, figure-4, half splits ---- */
+(function(M,P){
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+// ---- Supine twist: viewed from the head end (camera above the head), arms in a T on the floor, bent knees drop to the right
+(function(){
+  const Z=66;                                    // head near z=0 so the whole body sits above the floor line
+  const arms=(z)=>({lA:{ik:[70,4,z], pole:[0,1,0], hd:[1,-0.05,0]}, rA:{ik:[-70,4,z], pole:[0,1,0], hd:[-1,-0.05,0]}});
+  M['Supine twist'] = {
+    cam:{yaw:180, pitch:45},
+    props:[{box:[-32,32,0,1,Z-74,Z+74], k:'soft'}],
+    hl:['lumbar'],
+    base:Object.assign({root:[0,11,Z], pel:[-90,-90,90], sp:[0,0,0], ch:[0,0,0], nk:[15,0],
+      lL:{h:[45,-4,0], k:98, a:-35}, rL:{h:[45,-4,0], k:98, a:-35}}, arms(Z-44)),
+    poses:{
+      mid:{},
+      drop:{root:[0,14.5,Z], pel:[-162,-90,90], sp:[0,0,32], ch:[0,0,35], nk:[15,-25],
+        lL:{h:[62,-6,0], k:105, a:0}, rL:{h:[62,-6,0], k:105, a:0}},
+      deep:{root:[0,15.5,Z], pel:[-170,-90,90], sp:[0,0,35], ch:[0,0,38], nk:[15,-28],
+        lL:{h:[64,-6,0], k:105, a:0}, rL:{h:[64,-6,0], k:105, a:0}},
+    },
+    seq:[['mid',1.5],['drop',2.5],['deep',2],['drop',2]],
+  };
+})();
+
+// ---- Child's pose: side view, hips back to the heels, chest over the thighs, arms long, forehead down
+M['Child’s pose'] = {
+  cam:{yaw:90, pitch:4},
+  hl:['lumbar','chest'],
+  base:{root:[0,28,0], pel:[70,0,0], sp:[10,0,0], ch:[25,0,0], nk:[50,0],
+    lL:{ik:[9,5,-5], pole:[0.55,1,-0.1], a:-60}, rL:{ik:[-9,5,-5], pole:[-0.55,1,-0.1], a:-60},
+    lA:{ik:[19,3,93], pole:[0.3,-1,0], hd:[0,0,1]}, rA:{ik:[-19,3,93], pole:[-0.3,-1,0], hd:[0,0,1]}},
+  poses:{ out:{}, in:{root:[0,29.5,0], sp:[12,0,0], ch:[25,0,0], nk:[51,0]} },
+  seq:[['out',3],['in',2.5]],
+};
+
+// ---- Figure-4 stretch: raised side view, right (near) ankle crossed over the left knee, left hand draws the left thigh in,
+//      right hand rests on the floor (keeps the near side uncluttered)
+function f4(f){
+  const D=Math.PI/180, u=[Math.cos(f*D), Math.sin(f*D)];      // [z,y] direction of the left thigh
+  const ant=[Math.cos((f+90)*D), Math.sin((f+90)*D)], post=[-ant[0],-ant[1]];
+  const at=(t,off,n)=>[11+t*44*u[1]+off*n[1], t*44*u[0]+off*n[0]];
+  const ank=at(0.88,8,ant), hnd=at(0.62,7,post);
+  return {lL:{h:[f,0,0], k:f, a:5}, rL:{ik:[13,ank[0],ank[1]], pole:[-1,0.1,0.15], a:18},
+    lA:{ik:[14,hnd[0],hnd[1]], pole:[1,-0.3,0]}, rA:{ik:[-30,3,-4], pole:[-1,0,0]}};
+}
+M['Figure-4 stretch'] = {
+  cam:{yaw:90, pitch:30},
+  hl:['hips'],
+  base:Object.assign(P.hookLying(), {nk:[20,0]}, f4(98)),
+  poses:{ ease:{}, draw:Object.assign({nk:[26,0]}, f4(118)) },
+  seq:[['ease',1.2],['draw',2.5],['draw',1],['ease',2.5]],
+};
+
+// ---- Half splits: back knee down, front leg straight with the heel on the floor, hinge over it
+(function(){
+  const R=[0,50,-2];
+  const pose=(p,sp,ch)=>({root:R, pel:[p,0,0], sp:[sp,0,0], ch:[ch,0,0], rL:{h:[p+61,0,0], k:0, a:28, t:0}});
+  M['Half splits'] = {
+    cam:{yaw:90, pitch:6},
+    props:[{box:[0,24,0,3,-24,6], k:'towel'}, {box:[-33,-19,0,15,33,47], k:'soft', front:true}, {box:[3,17,0,15,33,47], k:'soft'}],
+    hl:['rThigh'],
+    base:Object.assign(pose(50,8,6), {nk:[-12,0],
+      lL:{ik:[11,6,-44], pole:[0,-0.4,1], a:-60},
+      lA:{ik:[10,18.5,39], pole:[0.3,-1,0], hd:[0,-0.1,1]}, rA:{ik:[-26,18.5,39], pole:[-0.3,-1,0], hd:[0,-0.1,1]}}),
+    poses:{ a:{}, b:pose(62,10,8) },
+    seq:[['a',2.5],['b',3],['b',1],['a',2.5]],
+  };
+})();
+})(window.MOVES, window.POSE);
