@@ -4,26 +4,25 @@ A personal home strength & rehab app. One HTML file, no build step, no accounts,
 
 ## The program
 
-Built around WHO / ACSM physical-activity guidelines (strength for all major muscle groups 2+ days/week, 150+ min of moderate activity), arranged as a 7-day week of 25–30 minute sessions:
+Version 2 (Sep 2026) is rebuilt around a right-knee patellofemoral pain flare and a big-toe (1st MTP) push-off problem. It follows the JOSPT 2019 patellofemoral pain guideline and the BJSM 2024 best-practice guide: hip plus knee strengthening, about 3 times a week, for 6–12 weeks.
 
 | Day | Session | Focus |
 |-----|---------|-------|
-| Mon | Lower Body — Knees | Knee ladder (wall sit → tempo squats → split squats → step-downs → RFESS → skater squat), glutes, calf & toe ladder, side planks |
-| Tue | Upper Body + Core | Push & pull ladders, McGill Big 3 (curl-up, side plank, bird dog) |
-| Wed | Yoga Flow | Hips, hamstrings, spine |
-| Thu | Lower Body — Hinge & Hamstrings | Hinge patterning, eccentric slider curls, calf & toe ladder |
-| Fri | Conditioning | Low-impact circuit, knee/toe-friendly |
-| Sat | Long Stretch + Balance | Longer holds, single-leg balance (toe rehab) — or a brisk walk |
+| Mon | Rehab A: Knee & Hip | Wall sits, knee ladder, side-of-hip ladder, calf + big-toe ladders |
+| Tue | Upper Body + Core | Push & pull ladders, McGill Big 3, wall-sit and toe top-up |
+| Wed | Rehab B: Hinge & Knee | Hinge + hamstring ladders, knee, side-of-hip, calf + big toe |
+| Thu | Yoga Flow | Knee-friendly versions (figure-4 instead of pigeon) |
+| Fri | Rehab C: Knee & Toe | Wall sits, knee, glute, side-of-hip, big toe, calf, balance |
+| Sat | Conditioning + Upper | 3 low-impact rounds using the push/pull rungs, or a long walk |
 | Sun | Rest | — |
 
-Rehab is baked in rather than bolted on:
+- **Knee ladder** is ordered by patellofemoral load (Song 2023): high box squat → step-up → chair box squat → split squat → step-down → RFESS → skater squat.
+- **Big-toe push-off ladder** builds loaded toe extension: seated toe-bend raise → towel-roll heel raises → supported toe-tuck rocks → pogo → skipping → strides.
+- **My kit** (loop bands, ankle weights, kettlebell) switches on exercises that need them.
+- **Benchmarks** every 2 weeks: single-leg calf raises to fatigue (with metronome), toe-tuck kneel pain, step-down pain and knee drift, haunches pain.
+- A pain traffic light (≤3/10 and settled by morning = fine; 4–5 = stay or drop a rung; 6+/sharp = stop today) governs everything. After each session the app asks how each ladder felt and levels you up or down.
 
-- **Big toe strain** — toe mobility + short-foot drills in every lower warm-up; a calf/toe ladder that ends in pogo hops and strides as the return-to-sprint gate.
-- **Knees** — isometrics first (wall sits), then progressive loading up the knee ladder.
-- **Lumbar disc history** — McGill Big 3 as the core staple; hip-hinge patterning; no loaded spinal flexion.
-- **Hamstring** — eccentric loading via slider curls (the home Nordic curl).
-
-A pain traffic light (≤3/10 that settles by morning = fine; 4–5 = drop a rung; 6+/sharp = stop today) governs everything. Exercises live on progression "ladders"; after each session the app asks how the work felt and levels you up or down.
+Existing data migrates automatically: knee and calf rungs are remapped to the new ladders (knee capped at rung 3 while it's flaring).
 
 ## Install on a phone (Pixel / Android)
 
