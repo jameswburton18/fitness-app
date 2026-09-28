@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="fig.css">
+<style>
+body{margin:0; background:#141b17; color:#ece7d9; font:12px system-ui}
+.row{display:flex; gap:6px; padding:6px; border-bottom:1px solid #2c3a32; align-items:center}
+.lbl{width:130px; flex:none; font-weight:600}
+.cell{width:230px; height:144px; background:var(--stage); border-radius:8px; position:relative; flex:none}
+.cell b{position:absolute; left:6px; top:4px; font-weight:500; color:#9db0a3; font-size:10px}
+</style>
+<div id="out"></div>
+<script src="../figure.js"></script>
+<script src="../moves.js"></script>
+<script>
+const q=new URLSearchParams(location.search);
+const parts=(q.get('parts')||'').split(',').filter(Boolean);
+let loaded=0;
+function go(){
+  const names=(q.get('m')||'').split('|').filter(Boolean);
+  const list=names.length?names:Object.keys(MOVES);
+  const out=document.getElementById('out');
+  list.forEach(n=>{
+    const mv=MOVES[n];
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<div class="lbl">'+n+(mv?'':' (MISSING)')+'</div>';
+    out.appendChild(row);
+    if(!mv) return;
+    let times=Figure.keyTimes(mv);
+    const c=Figure.compile(mv);
+    const names2=c.seq.map(s=>s.name);
+    // unique keyframes only
+    const seen=new Set(); const keep=[];
+    times.forEach((t,i)=>{ if(!seen.has(names2[i])){ seen.add(names2[i]); keep.push([t,names2[i]]); } });
+    if(q.get('mid')) keep.push([c.total*0.5,'mid']);
+    keep.slice(0,5).forEach(([t,nm])=>{
+      const cell=document.createElement('div'); cell.className='cell';
+      cell.innerHTML='<b>'+nm+' @'+t.toFixed(1)+'s</b>';
+      row.appendChild(cell);
+      const st=Figure.Stage(cell,{aspect:230/144});
+      st.set(mv,{t, flip:q.get('flip')==='1'});
+    });
+  });
+  document.title='ready';
+}
+if(!parts.length) go();
+else parts.forEach(p=>{ const s=document.createElement('script'); s.src='parts/'+p+'.js'; s.onload=()=>{ if(++loaded===parts.length) go(); }; document.body.appendChild(s); });
+</script>

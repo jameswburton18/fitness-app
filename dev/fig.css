@@ -1,0 +1,19 @@
+:root{--stage:#1b241f; --fig:#ece7d9; --fig-far:#a9b3a6; --accent:#e2a355; --line:#3a4a40; --prop:#33443a; --prop2:#2a382f; --prop-top:#42564a; --rest:#7ea8c4}
+.fig-svg{width:100%; height:100%; display:block; overflow:hidden}
+.fig .ff{fill:var(--fig)} .fig .far .ff{fill:var(--fig-far)}
+.fig .fh{fill:var(--stage)}
+.fig .fhl{fill:var(--accent)}
+.fig-ground{stroke:var(--line); stroke-width:1.4}
+.fig-shadow{fill:rgba(0,0,0,.22)}
+.fp-top{fill:var(--prop-top); stroke:var(--stage); stroke-width:.8}
+.fp-side{fill:var(--prop); stroke:var(--stage); stroke-width:.8}
+.fp-side2{fill:var(--prop2); stroke:var(--stage); stroke-width:.8}
+.fp-line{stroke:var(--prop-top)}
+.fk-wall.fp-side,.fk-wall.fp-side2,.fk-wall.fp-top{fill:var(--prop2)}
+.fk-soft.fp-top{fill:#4d5f6b} .fk-soft.fp-side{fill:#3c4c56} .fk-soft.fp-side2{fill:#34424b}
+.fk-towel.fp-top{fill:#6f8fa6}
+.fa-kb{fill:#5b6b62; stroke:var(--stage); stroke-width:1.5} .fa-kbh{fill:none; stroke:#5b6b62; stroke-width:2.6; stroke-linecap:round}
+.fa-cuff{fill:#7ea8c4; stroke:var(--stage); stroke-width:1}
+.fa-band{fill:var(--rest); opacity:.95}
+.fa-stick{fill:#b58a57; stroke:var(--stage); stroke-width:1}
+.fa-towel{fill:#7ea8c4}

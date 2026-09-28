@@ -1,5 +1,5 @@
-const CACHE = 'sturdy-v3';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'sturdy-v4';
+const ASSETS = ['./', './index.html', './figure.js', './moves.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
