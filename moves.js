@@ -1124,3 +1124,9 @@ M['Figure-4 stretch'] = {
   };
 })();
 })(window.MOVES, window.POSE);
+
+/* ---- camera tweaks: 3/4 views read better than front-on for these ---- */
+(function(M){
+  if(M['Archer push-up']) M['Archer push-up'].cam={yaw:125, pitch:30};
+  if(M['Bear-crawl shoulder taps']) M['Bear-crawl shoulder taps'].cam={yaw:55, pitch:20};
+})(window.MOVES);

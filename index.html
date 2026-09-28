@@ -1529,6 +1529,7 @@ async function startSession(sid){
   elapsedTimer=setInterval(()=>{ const s=Math.floor((Date.now()-sessionStart)/1000); $('#p-elapsed').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },1000);
   $('#p-elapsed').textContent='0:00';
   requestAnimationFrame(()=>showStep({dir:'f', first:true}));
+  if(!store.get('soundTip',false)){ store.set('soundTip',true); setTimeout(()=>toast('Voice cues on. Tap the speaker to change'),900); }
 }
 document.addEventListener('visibilitychange', async ()=>{
   if(document.visibilityState==='visible' && $('#player').classList.contains('on')){
@@ -1638,7 +1639,7 @@ function showStep(o){
     $('#p-phase').textContent = st.sec || 'Flow';
     if(st.mode==='time'){
       const prevRest = stepIx>0 && steps[stepIx-1].kind==='rest' && o.natural;
-      if(prevRest){ phase='run'; setPrimary('run'); startClock(st.secs,'run'); pbeep(880,.16); say(st.name+(st.side?', '+st.side+' side':'')); }
+      if(prevRest){ phase='run'; setPrimary('run'); startClock(st.secs,'run'); pbeep(880,.16); }
       else {
         phase='ready'; P.classList.add('is-ready'); $('#p-phase').textContent='Get ready';
         setPrimary('ready'); startClock(5,'ready');
@@ -1649,7 +1650,8 @@ function showStep(o){
       const rp=repParts(st.reps);
       $('#p-clock').className='p-clock reps';
       $('#p-clock').innerHTML='<div class="p-num"><span class="v">'+esc(rp.v||'–')+'</span><span class="u">'+esc(rp.u)+'</span></div>';
-      say(st.name+'. '+spokenReps(st.reps)+(st.side?'. '+st.side+' side':''));
+      const afterRest = stepIx>0 && steps[stepIx-1].kind==='rest' && o.natural;
+      say(afterRest ? spokenReps(st.reps) : st.name+'. '+spokenReps(st.reps)+(st.side?'. '+st.side+' side':''));
     }
   }
 }
