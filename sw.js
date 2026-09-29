@@ -1,4 +1,4 @@
-const CACHE = 'sturdy-v4';
+const CACHE = 'sturdy-v5';
 const ASSETS = ['./', './index.html', './figure.js', './moves.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {

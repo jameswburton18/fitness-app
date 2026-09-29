@@ -18,8 +18,8 @@ function go(){
   const names=(q.get('m')||'').split('|').filter(Boolean);
   const list=names.length?names:Object.keys(MOVES);
   const out=document.getElementById('out');
-  list.forEach(n=>{
-    const mv=MOVES[n];
+  const rows=[]; list.forEach(n=>{ const m=MOVES[n]; if(m && m.alt) m.alt.forEach((a,i)=>rows.push([n+' ['+(i+1)+']', a])); else rows.push([n, m]); });
+  rows.forEach(([n,mv])=>{
     const row=document.createElement('div'); row.className='row';
     row.innerHTML='<div class="lbl">'+n+(mv?'':' (MISSING)')+'</div>';
     out.appendChild(row);

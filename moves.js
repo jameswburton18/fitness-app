@@ -16,9 +16,9 @@ window.POSE = (function(){
       lL:{pl:[10,0,50], pole:[0,0,1]}, rL:{pl:[-10,0,50], pole:[0,0,1]},
       lA:{ik:[22,3,-4], pole:[1,0,0]}, rA:{ik:[-22,3,-4], pole:[-1,0,0]}}),
     // hands and knees (facing +z), back flat
-    quadruped: ()=>({root:[0,62,-10], pel:[90,0,0], sp:[0,0,0], nk:[-10,0],
-      lL:{ik:[11,8,-62], pole:[0,0,1], a:-60}, rL:{ik:[-11,8,-62], pole:[0,0,1], a:-60},
-      lA:{ik:[17,3,43], pole:[0.3,-1,0], hd:[0,0,1]}, rA:{ik:[-17,3,43], pole:[-0.3,-1,0], hd:[0,0,1]}}),
+    quadruped: ()=>({root:[0,52,-10], pel:[85,0,0], sp:[0,0,0], nk:[-8,0],   // knees under hips on the floor, wrists under shoulders
+      lL:{ik:[11,6,-53], pole:[0,0,1], a:-60}, rL:{ik:[-11,6,-53], pole:[0,0,1], a:-60},
+      lA:{ik:[17,3,34], pole:[0.3,-1,0], hd:[0,0,1]}, rA:{ik:[-17,3,34], pole:[-0.3,-1,0], hd:[0,0,1]}}),
   };
 })();
 
@@ -1129,4 +1129,64 @@ M['Figure-4 stretch'] = {
 (function(M){
   if(M['Archer push-up']) M['Archer push-up'].cam={yaw:125, pitch:30};
   if(M['Bear-crawl shoulder taps']) M['Bear-crawl shoulder taps'].cam={yaw:55, pitch:20};
+})(window.MOVES);
+
+/* ---- fix2: cat–cow with hands and knees planted and a clear round/arch ---- */
+(function(M,P){
+const Q = {root:[0,52,-10], pel:[85,0,0], sp:[0,0,0], ch:[0,0,0], nk:[-8,0],
+  lL:{ik:[11,6,-53], pole:[0,0,1], a:-60}, rL:{ik:[-11,6,-53], pole:[0,0,1], a:-60},
+  lA:{ik:[17,3,34], pole:[0.3,-1,0], hd:[0,0,1]}, rA:{ik:[-17,3,34], pole:[-0.3,-1,0], hd:[0,0,1]}};
+M['Cat–cow'] = {
+  hl:['lumbar','chest'],
+  base:Q,
+  poses:{
+    flat:{},
+    cat:{pel:[68,0,0], root:[0,51,-10], sp:[-8,0,0], ch:[46,0,0], nk:[40,0]},
+    cow:{pel:[99,0,0], root:[0,52,-10], sp:[2,0,0], ch:[-30,0,0], nk:[-34,0]},
+  },
+  seq:[['flat',1.2],['cat',2.5],['cat',0.6],['flat',1.6],['cow',1.6],['cow',0.6]],
+};
+})(window.MOVES, window.POSE);
+
+/* ---- fix2: Y-W-T seen from above the feet, so the letters read ---- */
+(function(M,P){
+// Prone, face down, head toward +z. Viewed from the feet end, looking down, so the letters read upright.
+const base={root:[0,11,0], pel:[90,0,0], sp:[0,0,0], ch:[0,0,0], nk:[6,0],
+  lL:{h:[0,3,0], k:0, a:-78}, rL:{h:[0,3,0], k:0, a:-78}};
+const arms=(L)=>({lA:L(1), rA:L(-1)});
+const Y=(y)=>arms(s=>({ik:[s*54, y, 80], pole:[s*0.2,0,-1]}));
+const W=(y)=>arms(s=>({ik:[s*46, y, 52], pole:[s*0.8,-1,-0.3]}));
+const T=(y)=>arms(s=>({ik:[s*70, y, 43], pole:[s*0.1,0,-1]}));
+const lift={ch:[-6,0,0], nk:[0,0]};
+M['Prone Y-W-T'] = {
+  cam:{yaw:160, pitch:55},
+  floor:false,
+  props:[{box:[-38,38,0,1.2,-110,92], k:'soft'}],
+  hl:['shoulders','chest','lUpper','rUpper'],
+  base:Object.assign({}, base, Y(5)),
+  poses:{
+    y0:Y(5),           y1:Object.assign({}, Y(20), lift),
+    w0:W(5),           w1:Object.assign({}, W(19), lift),
+    t0:T(5),           t1:Object.assign({}, T(19), lift),
+  },
+  seq:[['y0',1.1],['y1',1],['y1',0.8],['y0',0.9],
+       ['w0',1],['w1',1],['w1',0.8],['w0',0.9],
+       ['t0',1],['t1',1],['t1',0.8],['t0',0.9]],
+};
+})(window.MOVES, window.POSE);
+
+/* ---- fix2: scap push-ups and arm circles as two framed parts; plainer side planks ---- */
+(function(M){
+  // Split the combined move into two parts that alternate, each framed on its own:
+  // a close plank for the shoulder-blade squeezes, then standing arm circles.
+  const old=M['Scap push-ups + arm circles'];
+  if(!old || old.alt) return;
+  const P=old.poses;
+  const scap={hl:['shoulders','chest'], base:old.base, poses:{spread:P.spread, squeeze:P.squeeze},
+    seq:[['spread',0.9],['squeeze',0.9]], loops:4};
+  const circles={hl:['shoulders','lUpper','rUpper'], base:P.c0, poses:{c0:P.c0, c1:P.c1, c2:P.c2, c3:P.c3},
+    seq:[['c0',0.9,'lin'],['c1',0.9,'lin'],['c2',0.9,'lin'],['c3',0.9,'lin']], loops:2};
+  M['Scap push-ups + arm circles']={alt:[scap, circles]};
+  // front-on, a torso highlight reads as a blob; the figure alone is clearer
+  ['Side plank','Side plank, knees bent','Side plank + leg lift'].forEach(n=>{ if(M[n]) M[n].hl=[]; });
 })(window.MOVES);

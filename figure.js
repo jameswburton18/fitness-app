@@ -299,6 +299,17 @@ function Stage(host, opts){
     chains[c]={g, halo:mk('path',{class:'fh'},g), fill:mk('path',{class:'ff'},g), hl:mk('path',{class:'fhl'},g), att:mk('g',{},g)};
   });
   let mv=null, P=null, vb=null, flip=false, t0=performance.now(), raf=0, running=false, tOff=0, speed=1, hlSet=new Set();
+  // A move can alternate between sub-moves ({alt:[a, b]}, each with optional loops:n); each part gets its own camera fit.
+  let top=null, subIx=0, switching=false, swT=0;
+  svg.style.transition='opacity .22s ease';
+  const subDur=m=>(m.loops||1)*compile(m).total;
+  function useSub(m){
+    mv=m; P=camera(m.cam); hlSet=new Set(m.hl||[]);
+    gBack.innerHTML=''; gFront.innerHTML='';
+    drawProps(gBack, m.props, P, false); drawProps(gFront, m.props, P, true);
+    fit();
+    flipG.setAttribute('transform', flip ? 'translate('+f1(2*vb[0]+vb[2])+',0) scale(-1,1)' : '');
+  }
 
   function fit(){
     const c=compile(mv), N=28;
@@ -312,7 +323,7 @@ function Stage(host, opts){
       if(pr.box){ const [a,b,c2,d,e,f]=pr.box; [[a,c2,e],[b,c2,e],[a,d,e],[b,d,e],[a,c2,f],[b,c2,f],[a,d,f],[b,d,f]].forEach(v=>{ const p=P(v); if(!pr.noFit) acc(p[0],p[1],1); }); }
       if(pr.cyl){ pr.cyl.forEach(v=>{ const p=P(v); acc(p[0],p[1],pr.r||5); }); }
     });
-    const fl=P([0,0,0]); acc(fl[0], fl[1], 0);
+    const fl=P([0,0,0]); if(mv.floor!==false) acc(fl[0], fl[1], 0);
     if(mv.zoom){ // explicit world-space window [x0,x1,y0,y1] in screen units
       [x0,x1,y0,y1]=mv.zoom;
     }
@@ -324,6 +335,7 @@ function Stage(host, opts){
     else { const nh=w/ar; y0-=(nh-h); h=nh; } // keep the floor anchored at the bottom
     vb=[x0,y0,w,h];
     svg.setAttribute('viewBox', vb.map(f1).join(' '));
+    gFloor.style.display = mv.floor===false ? 'none' : '';
     floor.setAttribute('x1',f1(x0-50)); floor.setAttribute('x2',f1(x0+w+50));
     floor.setAttribute('y1',f1(fl[1])); floor.setAttribute('y2',f1(fl[1]));
   }
@@ -385,23 +397,26 @@ function Stage(host, opts){
   function frame(now){
     raf=0;
     if(!running) return;
-    draw(((now-t0)/1000)*speed+tOff);
+    const t=((now-t0)/1000)*speed+tOff;
+    if(top && top.alt && !switching && t>=subDur(mv)){
+      switching=true; svg.style.opacity='0';
+      swT=setTimeout(()=>{ subIx=(subIx+1)%top.alt.length; useSub(top.alt[subIx]); t0=performance.now(); tOff=0; draw(0); svg.style.opacity=''; switching=false; },230);
+    }
+    if(!switching) draw(t);
     raf=requestAnimationFrame(frame);
   }
   const api={
     set(move, o){
       o=o||{};
-      mv=move; P=camera(move&&move.cam);
-      hlSet=new Set(move&&move.hl||[]);
-      flip=!!o.flip;
-      if(!mv){ svg.style.visibility='hidden'; return api; }
+      top=move; flip=!!o.flip; subIx=0; switching=false; clearTimeout(swT); svg.style.opacity='';
+      if(!move){ mv=null; svg.style.visibility='hidden'; return api; }
       svg.style.visibility='';
-      gBack.innerHTML=''; gFront.innerHTML='';
-      drawProps(gBack, mv.props, P, false); drawProps(gFront, mv.props, P, true);
-      fit();
-      flipG.setAttribute('transform', flip ? 'translate('+f1(2*vb[0]+vb[2])+',0) scale(-1,1)' : '');
       t0=performance.now(); tOff=o.t||0;
-      if(running){ /* keep running from the new move's start */ }
+      if(move.alt){
+        let tt=tOff;
+        for(let i=0;i<move.alt.length;i++){ const d=subDur(move.alt[i]); if(tt<d || i===move.alt.length-1){ subIx=i; break; } tt-=d; }
+        tOff=tt; useSub(move.alt[subIx]);
+      } else useSub(move);
       draw(tOff);
       return api;
     },
@@ -411,7 +426,7 @@ function Stage(host, opts){
     at(t){ draw(t); return api; },
     speed(s){ if(running){ tOff=((performance.now()-t0)/1000)*speed+tOff; t0=performance.now(); } speed=s; return api; },
     get svg(){ return svg; },
-    destroy(){ api.pause(); svg.remove(); },
+    destroy(){ api.pause(); clearTimeout(swT); svg.remove(); },
   };
   return api;
 }

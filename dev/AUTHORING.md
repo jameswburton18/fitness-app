@@ -41,6 +41,7 @@ M['Exact exercise name'] = {
   base:{...full pose...},
   poses:{ name:{...overrides merged onto base...}, ... },
   seq:[['start',1],['down',3],['down',0.5],['start',1.5]],   // [pose, secs to reach it, ease?('sine'|'lin'|'out'|'in')]
+  floor:false,                      // optional: hide the floor line + shadow (top-down views; add a mat box instead)
   zoom:[xmin,xmax,ymin,ymax],        // optional fixed window in projected screen units (y is DOWN, so y=-40 is 40cm above the floor)
   pad:10                            // optional padding
 };
