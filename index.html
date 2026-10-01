@@ -69,6 +69,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-of
 .card h3{font-size:.98rem; font-weight:700; margin:14px 0 4px}
 .card p{margin:.4em 0; color:var(--ink2); font-size:.92rem}
 .card p strong{color:var(--ink)}
+.knee-card{border-color:color-mix(in srgb, var(--rest) 55%, var(--line))}
+.knee-card .eyebrow{color:var(--rest)}
+.km-note{font-size:.84rem !important}
+.km-lib{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+.link-btn{background:none; border:none; padding:8px 4px; color:var(--ink3); font-size:.85rem; text-decoration:underline; text-underline-offset:3px}
 .tag{display:inline-block; background:var(--bg3); border-radius:999px; padding:2px 10px; font-size:.75rem; font-weight:600; color:var(--ink2); margin-right:6px}
 .tag.hot{background:var(--accent); color:var(--accent-ink)}
 
@@ -496,6 +501,8 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
       <details class="preview" id="today-preview"></details>
     </div>
 
+    <div class="card knee-card" id="knee-card" hidden></div>
+
     <div class="card due-card" id="bench-due" hidden>
       <div class="eyebrow">Benchmarks due</div>
       <p>Five minutes: calf raises each side, the toe kneel and two knee checks. It’s how you’ll see the toe and knee improving, week to week.</p>
@@ -587,6 +594,7 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
       <div class="eyebrow">Progression ladders</div>
       <p style="margin-bottom:8px">Your current rung is highlighted. Adjust freely. The right rung is the one where the last 2 reps feel hard but clean.</p>
       <div id="lib-ladders"></div>
+      <div class="km-lib" id="km-lib"></div>
     </div>
     <div class="card">
       <div class="eyebrow">Fixed drills</div>
@@ -802,6 +810,7 @@ const DRILLS = {
   toepress:    {n:'Big-toe press', mode:'time', secs:40, perSide:true, d:'Standing, weight slightly forward: press the big toe down into the floor as hard as you can for 5s, relax 2s, repeat', cues:['Heel stays down','Other toes relaxed','This is the push-off muscle, so press hard'], area:'Toe rehab'},
   balance:     {n:'Single-leg balance, eyes busy', mode:'time', secs:30, perSide:true, d:'Stand on one leg, turn your head slowly side to side', cues:['Barefoot','Quiet grip through the big toe','Eyes closed for 10s once it’s easy'], area:'Toe rehab'},
   wallsit:     {n:'Wall sit', mode:'time', secs:45, sets:3, d:'Back flat on the wall. Slide down only as far as stays ≤3/10. Halfway to parallel is plenty for now', cues:['Push the floor away through the whole foot','Breathe, don’t hold it','Knees over the middle toes'], area:'Knee rehab'},
+  isowall:     {n:'Tendon wall sit', mode:'time', secs:45, sets:5, d:'Back on the wall, knees bent only to about 45–60° (well short of a chair). Hold it firmly. Steady holds like this calm a grumpy knee tendon', cues:['Hard enough to feel the thighs working, knee ≤3/10','If it bites, slide up a little','Knees over the middle toes'], area:'Knee mode'},
   kneeext:     {n:'Seated knee extension', mode:'reps', reps:'12 / side', sets:3, needs:'ankle', d:'Ankle weight on, sit tall. Straighten the knee from 90° to about halfway (45°), 2s up, 3s down', cues:['Stop short of fully straight for now. That’s the range easiest on the kneecap','Slow lowering','Add weight when 3×12 is easy'], area:'Knee rehab'},
   bandwalk:    {n:'Lateral band walk', mode:'reps', reps:'10 steps each way', sets:2, needs:'band', d:'Loop band just above the knees, half-squat, step sideways', cues:['Toes forward, knees pushed out against the band','Stay low and level','Slow steps beat big steps'], area:'Knee rehab'},
   curlup:      {n:'McGill curl-up', mode:'reps', reps:'6 × 8s holds', est:70, sets:2, d:'On your back, one knee bent, hands under the low back arch. Lift head and shoulders a few cm, hold 8s', cues:['Tiny lift: the low back does not flatten','No neck strain, tongue on roof of mouth','Swap the bent leg between sets'], area:'Core (McGill Big 3)'},
@@ -949,6 +958,7 @@ let painLog = store.get('pain', []);     // [{d, toe, knee, back, ham}], one per
 let kit     = store.get('kit', {});      // {band:true, ...}
 let tests   = store.get('tests', []);    // [{d, calfL, calfR, toeKneel, stepDown, drift, haunch}]
 let blockStart = store.get('blockStart', null);
+let kneeMode = store.get('kneeMode', null);  // {since, rung} while the knee is flaring, else null
 const AREAS = [ ['toe','Big toe'], ['knee','Knees'], ['back','Lower back'], ['ham','Hamstring'] ];
 
 // Ask the browser not to evict our data under storage pressure.
@@ -994,9 +1004,57 @@ const migrated = migrate();
 function blockDef(b){ return b.slot ? LADDERS[b.slot].levels[lvl(b.slot)] : DRILLS[b.drill]; }
 function blockActive(b){ if(b.h) return true; if(b.unless && kit[b.unless]) return false; const d=blockDef(b); const need=b.needs||d.needs; return !need || !!kit[need]; }
 
+/* ---- knee mode: while the knee tendon is flaring, swap knee loading for isometric holds ----
+   The knee ladder rung is frozen (not levelled) and everything else in the week stays the same. */
+const KNEE_SWAP = { wallsit:'isowall', kneeext:null, stepups:'march' };
+function sessBlocks(sid){
+  const bl = SESSIONS[sid].blocks;
+  if(!kneeMode) return bl;
+  const out=[]; let iso=false;
+  bl.forEach(b=>{
+    let nb=b;
+    if(b.slot==='knee') nb={drill:'isowall'};
+    else if(b.drill && b.drill in KNEE_SWAP) nb = KNEE_SWAP[b.drill] ? Object.assign({}, b, {drill:KNEE_SWAP[b.drill]}) : null;
+    if(nb && nb.drill==='isowall'){ if(iso) return; iso=true; nb={drill:'isowall', rest:60}; }
+    if(nb) out.push(nb);
+  });
+  return out;
+}
+const kneeDays = () => kneeMode ? daysBetween(kneeMode.since, todayISO())+1 : 0;
+function kneeLogs(){ return kneeMode ? painLog.filter(p=>p.d>=kneeMode.since && typeof p.knee==='number') : []; }
+function kneeSuggest(){
+  if(kneeMode) return false;
+  const p=lastPain(); if(!p || typeof p.knee!=='number') return false;
+  return p.knee>=3 && daysBetween(p.d, todayISO())<=2 && store.get('kneeDismissed',null)!==p.d;
+}
+function startKneeMode(){
+  kneeMode={since:todayISO(), rung:lvl('knee')};
+  store.set('kneeMode', kneeMode); render(); toast('Knee mode on');
+}
+function endKneeMode(auto){
+  if(!kneeMode) return;
+  // ease back in one rung below where you were
+  levels.knee=Math.max(0, kneeMode.rung-1); store.set('levels', levels);
+  kneeMode=null; store.set('kneeMode', null);
+  store.set('kneeEnded', {d:todayISO(), auto:!!auto});
+  render();
+}
+// Done when the last 3 knee scores since it started are all ≤2.
+function checkKneeExit(){
+  if(!kneeMode) return;
+  const l=kneeLogs().slice(-3);
+  if(l.length===3 && l.every(p=>p.knee<=2)) endKneeMode(true);
+}
+function logKnee(v){
+  const d=todayISO(); const e=painLog.find(p=>p.d===d);
+  if(e) e.knee=v; else { painLog.push({d, knee:v}); painLog.sort((a,b)=>a.d<b.d?-1:1); }
+  store.set('pain', painLog);
+  checkKneeExit(); render();
+}
+
 function buildSteps(sid){
-  const s=SESSIONS[sid]; const out=[]; const slots=[]; let sec='';
-  s.blocks.forEach(b=>{
+  const out=[]; const slots=[]; let sec='';
+  sessBlocks(sid).forEach(b=>{
     if(b.h){ sec=b.h; return; }
     if(!blockActive(b)) return;
     const def=blockDef(b);
@@ -1020,7 +1078,7 @@ function buildSteps(sid){
 
 // Rough duration: reps ≈ 4s each (per side counted), plus a few seconds to set up.
 function estMins(sid){
-  if(!SESSIONS[sid].blocks.length) return 0;
+  if(!sessBlocks(sid).length) return 0;
   let t=0;
   buildSteps(sid).steps.forEach(x=>{
     if(x.kind==='rest') t+=x.secs;
@@ -1033,7 +1091,7 @@ function estMins(sid){
 
 function outline(sid){
   const groups=[]; let cur=null;
-  SESSIONS[sid].blocks.forEach(b=>{
+  sessBlocks(sid).forEach(b=>{
     if(b.h){ cur={h:b.h, items:[]}; groups.push(cur); return; }
     if(!blockActive(b)) return;
     if(!cur){ cur={h:'Flow', items:[]}; groups.push(cur); }
@@ -1112,7 +1170,8 @@ function renderToday(){
 
   // headline move: the first ladder rung in today's session, animating in the hero
   const hf=$('#hero-fig');
-  const lead = (s.blocks||[]).find(b=>b.slot) || (s.blocks||[]).find(b=>b.drill);
+  const sb = sessBlocks(sid);
+  const lead = sb.find(b=>b.slot) || sb.find(b=>b.drill);
   const leadName = lead ? blockDef(lead).n : null;
   const showHero = !!(leadName && window.Figure && window.MOVES && MOVES[leadName] && !did);
   hf.hidden = !showHero;
@@ -1156,6 +1215,7 @@ function renderToday(){
   }).join('');
 
   $('#bench-due').hidden = !benchDue();
+  renderKneeCard();
 
   // swaps
   const swaps = $('#swap-list'); swaps.innerHTML='';
@@ -1167,6 +1227,38 @@ function renderToday(){
   });
 
   $('#rehab-tip').textContent = REHAB_TIPS[(now.getDate()+dow) % REHAB_TIPS.length];
+}
+
+function renderKneeCard(){
+  const c=$('#knee-card'); const ended=store.get('kneeEnded',null);
+  if(kneeMode){
+    const today=painLog.find(p=>p.d===todayISO()&&typeof p.knee==='number');
+    const v=today?today.knee:2, n=kneeDays(), rungName=LADDERS.knee.levels[Math.max(0,kneeMode.rung-1)].n;
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee mode · day '+n+'</div>'+
+      '<p>Squats and step-ups are swapped for <strong>tendon wall sits</strong> (5 × 45s, shallow) until the knee settles. Everything else is unchanged. Keep walking, and skip deep squats, lunges, jumping and kneeling for now.</p>'+
+      '<h3>Morning check</h3><p style="margin-top:0">Do one slow half-squat. How does the knee feel?</p>'+
+      '<div class="ck-row"><div class="ck-head"><span class="cn">Knee</span><span class="cv num" id="km-v">'+v+'</span></div>'+
+      '<input type="range" min="0" max="10" step="1" value="'+v+'" id="km-r"><div class="ck-scale"><span>quiet</span><span>bad</span></div></div>'+
+      '<button class="ghost-btn" id="km-save" style="margin-top:8px">'+(today?'Update today’s score':'Log it')+'</button>'+
+      '<p class="km-note">Three scores of 2 or less in a row ends knee mode automatically, and you go back to <strong>'+esc(rungName)+'</strong> (one rung below where you were) to ease back in.'+
+      (n>=21?' <strong>It’s been 3 weeks.</strong> If it isn’t clearly easing, get it looked at by a physio.':' Swelling, locking, giving way, sharp pain or 6+/10: see a physio.')+'</p>'+
+      '<button class="link-btn" id="km-end">End knee mode now</button>';
+    const r=$('#km-r'); r.addEventListener('input', ()=>{ $('#km-v').textContent=r.value; });
+    $('#km-save').addEventListener('click', ()=>{ logKnee(+r.value); buzz(8); if(kneeMode) toast('Logged'); });
+    $('#km-end').addEventListener('click', ()=>endKneeMode(false));
+  } else if(ended && ended.d===todayISO()){
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee mode finished</div><p>'+(ended.auto?'Three calm scores in a row. ':'')+
+      'You’re back on <strong>'+esc(LADDERS.knee.levels[lvl('knee')].n)+'</strong>, one rung lower than before, and the ladder will move you up as it feels easy. Use slow tempo (3s down) for the first week.</p>';
+  } else if(kneeSuggest()){
+    const p=lastPain();
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee grumbling?</div><p>You logged the knee at '+p.knee+'/10. Knee mode swaps squats and step-ups for shallow tendon wall sits until three calm scores in a row, then eases you back in.</p>'+
+      '<div style="display:flex;gap:8px;margin-top:10px"><button class="ghost-btn" id="km-on">Turn on knee mode</button><button class="link-btn" id="km-no">Not now</button></div>';
+    $('#km-on').addEventListener('click', startKneeMode);
+    $('#km-no').addEventListener('click', ()=>{ store.set('kneeDismissed', p.d); render(); });
+  } else c.hidden=true;
 }
 
 function renderPlan(){
@@ -1206,6 +1298,10 @@ const LADDER_ORDER = ['knee','hip','toe','calf','glute','ham','hinge','push','pu
 function renderLibrary(){
   const open = [...document.querySelectorAll('#lib-ladders details')].map(d=>d.open);
   $('#lib-ladders').innerHTML = LADDER_ORDER.map(ladderHTML).join('');
+  $('#km-lib').innerHTML = kneeMode
+    ? '<p><strong>Knee mode is on</strong> (day '+kneeDays()+'). The knee ladder is paused on rung '+(kneeMode.rung+1)+'.</p><button class="ghost-btn" id="km-lib-btn">End knee mode</button>'
+    : '<p><strong>Knee flaring?</strong> Knee mode swaps squats and step-ups for shallow tendon wall sits until it settles.</p><button class="ghost-btn" id="km-lib-btn">Turn on knee mode</button>';
+  $('#km-lib-btn').addEventListener('click', ()=> kneeMode ? endKneeMode(false) : startKneeMode());
   document.querySelectorAll('#lib-ladders details').forEach((d,i)=>{ if(open[i]) d.open=true; });
   document.querySelectorAll('[data-lvl]').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -1346,6 +1442,7 @@ function saveCheckin(){
   painLog.push(entry);
   painLog.sort((a,b)=>a.d<b.d?-1:1);
   store.set('pain', painLog);
+  checkKneeExit();
 }
 
 function sparkline(points, max, W){ // points: [{d, v}] on a fixed 0–max scale
@@ -1406,6 +1503,7 @@ function applyBackup(d){
   if(d.kit) kit=d.kit;
   if(d.tests) tests=d.tests;
   if(d.blockStart) blockStart=d.blockStart;
+  if('kneeMode' in d){ kneeMode=d.kneeMode; store.set('kneeMode', kneeMode); }
   store.set('levels',levels); store.set('history',history); store.set('pain',painLog);
   store.set('kit',kit); store.set('tests',tests); if(blockStart) store.set('blockStart',blockStart);
   // A v1 backup restores v1 rungs: remap them.
@@ -1413,7 +1511,7 @@ function applyBackup(d){
   render(); alert('Restored.');
 }
 $('#btn-export').addEventListener('click', async ()=>{
-  const data = JSON.stringify({app:'sturdy', progv:PROGRAM_VERSION, exported:todayISO(), levels, history, pain:painLog, kit, tests, blockStart});
+  const data = JSON.stringify({app:'sturdy', progv:PROGRAM_VERSION, exported:todayISO(), levels, history, pain:painLog, kit, tests, blockStart, kneeMode});
   const fname = 'sturdy-backup-'+todayISO()+'.json';
   // Inside the claude.ai viewer, plain <a download> is inert — go through the
   // downloads capability there; use a normal download everywhere else.

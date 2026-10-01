@@ -188,6 +188,20 @@ M['Wall sit'] = {
   seq:[['out',2],['in',2]],
 };
 
+// ---------- Tendon wall sit (knee mode): same hold, much shallower ----------
+M['Tendon wall sit'] = {
+  props:[{box:[-40,40,0,190,-40,-35], k:'wall', noFit:true}],
+  hl:['rThigh','lThigh'],
+  base:{root:[0,84,-24], pel:[0,0,0], sp:[0,0,0], nk:[0,0],
+    rL:{pl:[-10,0,14]}, lL:{pl:[10,0,14]},
+    rA:{s:[10,12,0], e:30}, lA:{s:[10,12,0], e:30}},
+  poses:{
+    out:{},
+    in:{root:[0,84.6,-24], ch:[-4,0,0], nk:[-3,0], rA:{s:[12,13,0], e:30}, lA:{s:[12,13,0], e:30}},
+  },
+  seq:[['out',2],['in',2]],
+};
+
 // ---------- Quick step-ups (alternating lead leg) ----------
 (function(){
   const st=P.stand();

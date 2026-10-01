@@ -22,6 +22,8 @@ Version 2 (Sep 2026) is rebuilt around a right-knee patellofemoral pain flare an
 - **Benchmarks** every 2 weeks: single-leg calf raises to fatigue (with metronome), toe-tuck kneel pain, step-down pain and knee drift, haunches pain.
 - A pain traffic light (≤3/10 and settled by morning = fine; 4–5 = stay or drop a rung; 6+/sharp = stop today) governs everything. After each session the app asks how each ladder felt and levels you up or down.
 
+- **Knee mode** for flare-ups (e.g. patellar-tendon pain just below the kneecap). Turn it on from Today (it's offered when the knee is logged at 3+/10) or the Library. It swaps the knee rung and squat-type drills for shallow isometric wall sits (5 × 45s), swaps quick step-ups for marching, pauses knee levelling, and adds a morning half-squat check. Three knee scores of ≤2 in a row end it automatically and restart the knee ladder one rung below where it was.
+
 Existing data migrates automatically: knee and calf rungs are remapped to the new ladders (knee capped at rung 3 while it's flaring).
 
 ## The workout player
