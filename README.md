@@ -26,6 +26,12 @@ Version 2 (Sep 2026) is rebuilt around a right-knee patellofemoral pain flare an
 
 Existing data migrates automatically: knee and calf rungs are remapped to the new ladders (knee capped at rung 3 while it's flaring).
 
+## Looking ahead
+
+- Today shows a **Tomorrow** line under the session. Tap it, or any day in the *This week* strip, to see that day's session with its contents open. *Back to today* (or tapping the day again) returns; *Do it today* starts it now.
+- On the Plan tab, each day expands to show what's in it.
+- Previews use your current rungs and kit, and knee mode if it's on.
+
 ## The workout player
 
 - Every exercise has a looping animated demo that follows the move's tempo (e.g. "3s down") and mirrors for left/right sets. The demos are drawn by a small 3D pictogram engine (`figure.js`), with the poses in `moves.js`.

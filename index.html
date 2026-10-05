@@ -427,6 +427,30 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
 .legend i{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; background:var(--bg3)}
 .legend i.k{border:1.5px solid var(--accent)}
 .legend i.d{background:var(--good)}
+.legend .lg-hint{margin-left:auto}
+
+/* look ahead: preview any day's session in the hero */
+button.ws{padding:4px 0 2px; border-radius:12px}
+.ws.sel .c{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.ws.sel .sl{color:var(--accent)}
+.today-hero.peek{background:linear-gradient(165deg, color-mix(in srgb, var(--rest) 12%, var(--bg2)) 0%, var(--bg2) 55%)}
+.today-hero.peek .eyebrow{color:var(--rest)}
+.peek-acts{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.peek-acts .ghost-btn{width:auto; flex:1}
+.peek-acts .link-btn{flex:none}
+.next-link{display:flex; width:100%; align-items:center; gap:10px; margin-top:10px; padding:10px 0 0; border-top:1px solid var(--line); text-align:left; font-size:.85rem}
+.next-link[hidden]{display:none}
+.next-link .nk{font-weight:600; color:var(--ink2)}
+.next-link .nt{flex:1; min-width:0; color:var(--ink3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.next-link .chev{color:var(--ink3)}
+.pv-note{margin:10px 0 0; font-size:.78rem; color:var(--ink3)}
+.week-day{padding:0; border-top:none; border-bottom:1px solid var(--line)}
+.week-day:last-child{border-bottom:none}
+.week-day > .week-row{border-bottom:none; font-weight:inherit; font-size:inherit; justify-content:flex-start}
+.week-day.is-today .week-row .d{color:var(--accent)}
+.week-row .chev{color:var(--ink3); width:10px; text-align:center}
+.week-day .day-body{padding:0 0 12px 50px}
+.week-day .day-body .pv-group:first-child{margin-top:0}
 .due-card{border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
 .due-card .eyebrow{color:var(--accent)}
 .card ul.plain{margin:6px 0 0; padding-left:18px; color:var(--ink2); font-size:.92rem}
@@ -499,6 +523,7 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
       <div class="hero-fig" id="hero-fig" hidden><div class="p-fig" id="hero-fig-in"></div></div>
       <div id="today-action"></div>
       <details class="preview" id="today-preview"></details>
+      <button class="next-link" id="next-link" type="button" hidden></button>
     </div>
 
     <div class="card knee-card" id="knee-card" hidden></div>
@@ -512,7 +537,7 @@ details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
     <div class="card">
       <div class="eyebrow">This week</div>
       <div class="week-strip" id="week-strip"></div>
-      <div class="legend"><span><i class="k"></i>Rehab day</span><span><i class="d"></i>Done</span></div>
+      <div class="legend"><span><i class="k"></i>Rehab day</span><span><i class="d"></i>Done</span><span class="lg-hint">Tap a day to see it</span></div>
     </div>
 
     <div class="card">
@@ -1108,6 +1133,13 @@ function outline(sid){
   out.forEach(g=>{ if(g.times) g.h='Circuit × '+g.times; });
   return out.filter(g=>g.items.length);
 }
+function outlineHTML(sid){
+  return outline(sid).map(g=>
+    '<div class="pv-group"><div class="ph">'+esc(g.h)+'</div>'+g.items.map(i=>
+      '<div class="pv-item'+(i.slot?' lad':'')+'"><span><button class="pvn" data-demo="'+esc(i.n)+'">'+esc(i.n)+'</button></span><span class="num">'+esc(i.dose)+'</span></div>').join('')+'</div>'
+  ).join('');
+}
+const hasRungs = sid => sessBlocks(sid).some(b=>b.slot && blockActive(b));
 
 /* =====================================================================
    Screens
@@ -1117,6 +1149,7 @@ const $ = s => document.querySelector(s);
 function moveInd(){ const bs=[...document.querySelectorAll('nav button')], i=bs.findIndex(x=>x.classList.contains('on')); $('#nav-ind').style.transform='translateX('+(i*100)+'%)'; }
 document.querySelectorAll('nav button').forEach(b=>{
   b.addEventListener('click', ()=>{
+    if(!b.classList.contains('on')) viewDate=null; // coming back to Today shows today
     document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x===b));
     moveInd();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
@@ -1145,13 +1178,28 @@ function lastTest(){ return tests.length ? tests[tests.length-1] : null; }
 function benchDue(){ const t=lastTest(); return !t || daysBetween(t.d, todayISO())>=14; }
 
 let heroStage=null;
+// Look ahead: the hero can show another day's session. null = today.
+let viewDate=null, lastPvKey=null;
+const DAYLONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function peekDay(d){
+  viewDate = (!d || d===todayISO() || d===viewDate) ? null : d;
+  buzz(6); renderToday();
+  const hero=$('.today-hero'), y=hero.getBoundingClientRect().top+window.scrollY-12;
+  if(hero.getBoundingClientRect().top<0) window.scrollTo({top:y, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}
 function renderToday(){
   const now = new Date();
   $('#hdr-date').textContent = now.toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short'});
   const dow = dowMon0(now);
   const sid = WEEK[dow];
-  const s = SESSIONS[sid];
-  const did = doneOn(todayISO());
+  if(viewDate===todayISO()) viewDate=null;
+  const peek = !!viewDate;
+  const vday = peek ? viewDate : todayISO();
+  const vdow = dowMon0(new Date(vday+'T12:00'));
+  const vsid = WEEK[vdow];
+  const s = SESSIONS[vsid];
+  const did = doneOn(vday);
+  const off = daysBetween(todayISO(), vday);
 
   const wk = blockWeek();
   $('#block-line').innerHTML = '<span>Rehab block · week '+Math.min(wk,8)+' of 8</span><span class="bar"><i style="width:'+Math.min(100,wk/8*100)+'%"></i></span>'+
@@ -1162,18 +1210,21 @@ function renderToday(){
   let streak = weekCount(0)>=1 ? 1 : 0; for(let w=1; w<520; w++){ if(weekCount(w)>=3) streak++; else break; }
   $('#st-streak').textContent = streak;
 
-  $('#today-eyebrow').textContent = did ? 'Done for today' : ('Today · ' + DAYNAMES[dow] + (s.rehab?' · rehab day':''));
+  $('.today-hero').classList.toggle('peek', peek);
+  const when = off===1 ? 'Tomorrow · '+DAYNAMES[vdow] : off===-1 ? 'Yesterday · '+DAYNAMES[vdow] : DAYLONG[vdow];
+  $('#today-eyebrow').textContent = peek ? (when + (s.rehab?' · rehab day':'') + (did?' · done':''))
+    : did ? 'Done for today' : ('Today · ' + DAYNAMES[dow] + (s.rehab?' · rehab day':''));
   $('#today-title').textContent = s.title;
-  $('#today-meta').textContent = (sid==='rest' ? '' : '~'+estMins(sid)+' min · ') + s.desc;
+  $('#today-meta').textContent = (vsid==='rest' ? '' : '~'+estMins(vsid)+' min · ') + s.desc;
   $('#today-chips').innerHTML = (s.focus||[]).map(f=>'<span class="chip">'+esc(f)+'</span>').join('');
   $('#today-chips').style.display = (s.focus&&s.focus.length) ? '' : 'none';
 
-  // headline move: the first ladder rung in today's session, animating in the hero
+  // headline move: the first ladder rung in the shown session, animating in the hero
   const hf=$('#hero-fig');
-  const sb = sessBlocks(sid);
+  const sb = sessBlocks(vsid);
   const lead = sb.find(b=>b.slot) || sb.find(b=>b.drill);
   const leadName = lead ? blockDef(lead).n : null;
-  const showHero = !!(leadName && window.Figure && window.MOVES && MOVES[leadName] && !did);
+  const showHero = !!(leadName && window.Figure && window.MOVES && MOVES[leadName] && (peek || !did));
   hf.hidden = !showHero;
   if(showHero){
     if(!heroStage) heroStage=Figure.Stage($('#hero-fig-in'), {aspect:3});
@@ -1182,7 +1233,12 @@ function renderToday(){
   } else if(heroStage) heroStage.pause();
 
   const act = $('#today-action');
-  if(sid==='rest'){
+  if(peek){
+    act.innerHTML = '<div class="peek-acts"><button class="ghost-btn" id="peek-back">← Back to today</button>'+
+      (vsid!=='rest' && vsid!==sid ? '<button class="link-btn" id="peek-go">Do it today</button>' : '')+'</div>';
+    $('#peek-back').addEventListener('click', ()=>peekDay(null));
+    const pg=$('#peek-go'); if(pg) pg.addEventListener('click', ()=>{ viewDate=null; startSession(vsid); });
+  } else if(sid==='rest'){
     act.innerHTML = did ? '<p style="color:var(--good);font-weight:600;margin:0">Logged. See you tomorrow.</p>'
       : '<button class="ghost-btn" id="log-rest">Mark rest day taken</button>';
     const lr = $('#log-rest'); if(lr) lr.addEventListener('click', ()=>{ logSession('rest','Rest Day',0); render(); });
@@ -1196,23 +1252,33 @@ function renderToday(){
   }
 
   const pv = $('#today-preview');
-  if(sid==='rest'){ pv.style.display='none'; }
+  if(vsid==='rest'){ pv.style.display='none'; }
   else {
     pv.style.display='';
-    const wasOpen = pv.open;
-    pv.innerHTML = '<summary><span>What’s in it</span><span class="chev">›</span></summary>' + outline(sid).map(g=>
-      '<div class="pv-group"><div class="ph">'+esc(g.h)+'</div>'+g.items.map(i=>
-        '<div class="pv-item'+(i.slot?' lad':'')+'"><span><button class="pvn" data-demo="'+esc(i.n)+'">'+esc(i.n)+'</button></span><span class="num">'+esc(i.dose)+'</span></div>').join('')+'</div>'
-    ).join('');
+    // a day you've just switched to opens its contents; otherwise keep whatever you had open
+    const key = vday+'|'+vsid, wasOpen = key===lastPvKey ? pv.open : peek;
+    lastPvKey = key;
+    pv.innerHTML = '<summary><span>What’s in it</span><span class="chev">›</span></summary>' + outlineHTML(vsid) +
+      (peek && off>0 && hasRungs(vsid) ? '<p class="pv-note">Rungs are where you are now. They can move up after your next session.</p>' : '');
     pv.open = wasOpen;
   }
 
-  // week strip (Mon..Sun)
+  // up next (only on today's view)
+  const nl=$('#next-link');
+  nl.hidden = peek;
+  if(!peek){
+    const t=SESSIONS[WEEK[(dow+1)%7]];
+    nl.innerHTML='<span class="nk">Tomorrow</span><span class="nt">'+esc(t.title)+'</span><span class="chev">›</span>';
+    nl.onclick=()=>peekDay(isoOffset(1));
+  }
+
+  // week strip (Mon..Sun) — tap a day to preview it
   const ds = weekDates(0);
   $('#week-strip').innerHTML = WEEK.map((id,i)=>{
-    const cls = 'ws' + (SESSIONS[id].rehab?' key':'') + (doneOn(ds[i])?' done':'') + (i===dow?' today':'');
-    return '<div class="'+cls+'" title="'+esc(SESSIONS[id].title)+'"><div class="c">'+DAYNAMES[i][0]+'</div><div class="sl">'+esc(SESSIONS[id].short)+'</div></div>';
+    const cls = 'ws' + (SESSIONS[id].rehab?' key':'') + (doneOn(ds[i])?' done':'') + (i===dow?' today':'') + (peek && ds[i]===viewDate?' sel':'');
+    return '<button type="button" class="'+cls+'" data-day="'+ds[i]+'" aria-label="'+DAYLONG[i]+': '+esc(SESSIONS[id].title)+'"'+(i===dow?' aria-current="date"':'')+' aria-pressed="'+(ds[i]===vday)+'"><div class="c">'+DAYNAMES[i][0]+'</div><div class="sl">'+esc(SESSIONS[id].short)+'</div></button>';
   }).join('');
+  $('#week-strip').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click', ()=>peekDay(b.dataset.day)));
 
   $('#bench-due').hidden = !benchDue();
   renderKneeCard();
@@ -1262,10 +1328,7 @@ function renderKneeCard(){
 }
 
 function renderPlan(){
-  $('#plan-week').innerHTML = WEEK.map((id,i)=>{
-    const s=SESSIONS[id];
-    return '<div class="week-row"><div class="d">'+DAYNAMES[i]+'</div><div class="t">'+esc(s.title)+(s.rehab?' <span class="tag hot">rehab</span>':'')+'</div><div class="m num">'+(id==='rest'?'—':'~'+estMins(id)+' min')+'</div></div>';
-  }).join('');
+  renderPlanWeekOnly();
   $('#kit-list').innerHTML = KIT.map(k=>
     '<label class="kit-row"><input type="checkbox" data-kit="'+k.k+'"'+(kit[k.k]?' checked':'')+' aria-label="I have '+esc(k.n)+'">'+
     '<div><div><span class="kn">'+esc(k.n)+'</span><span class="kp">'+esc(k.p)+'</span></div>'+
@@ -1275,10 +1338,15 @@ function renderPlan(){
     el.addEventListener('change', ()=>{ kit[el.dataset.kit]=el.checked; store.set('kit', kit); renderToday(); renderPlanWeekOnly(); });
   });
 }
+// The week, each day expandable to show what's in its session.
 function renderPlanWeekOnly(){
+  const open = [...document.querySelectorAll('#plan-week .week-day')].map(d=>d.open);
+  const dow = dowMon0(new Date());
   $('#plan-week').innerHTML = WEEK.map((id,i)=>{
-    const s=SESSIONS[id];
-    return '<div class="week-row"><div class="d">'+DAYNAMES[i]+'</div><div class="t">'+esc(s.title)+(s.rehab?' <span class="tag hot">rehab</span>':'')+'</div><div class="m num">'+(id==='rest'?'—':'~'+estMins(id)+' min')+'</div></div>';
+    const s=SESSIONS[id], cls='week-day'+(i===dow?' is-today':'');
+    const row = '<div class="d">'+DAYNAMES[i]+'</div><div class="t">'+esc(s.title)+(s.rehab?' <span class="tag hot">rehab</span>':'')+'</div><div class="m num">'+(id==='rest'?'—':'~'+estMins(id)+' min')+'</div>';
+    if(id==='rest') return '<div class="'+cls+'"><div class="week-row">'+row+'<span class="chev"></span></div></div>';
+    return '<details class="'+cls+'"'+(open[i]?' open':'')+'><summary class="week-row">'+row+'<span class="chev">›</span></summary><div class="day-body">'+outlineHTML(id)+'</div></details>';
   }).join('');
 }
 
