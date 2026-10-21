@@ -379,6 +379,7 @@ function Stage(host, opts){
         if(a.kind==='kb'){ const w=S[a.at]; att+='<circle class="fa-kb" cx="'+f1(w[0])+'" cy="'+f1(w[1]+9)+'" r="8.5"/><path class="fa-kbh" d="M'+f1(w[0]-5)+' '+f1(w[1]+2)+'Q'+f1(w[0])+' '+f1(w[1]-5)+' '+f1(w[0]+5)+' '+f1(w[1]+2)+'"/>'; }
         if(a.kind==='cuff'){ const k=S[a.at.replace('Ank','Knee')], an=S[a.at]; const p=[lerp(an[0],k[0],0.1), lerp(an[1],k[1],0.1)], q=[lerp(an[0],k[0],0.28), lerp(an[1],k[1],0.28)]; att+='<path class="fa-cuff" d="'+capsule(p,q,5.8,5.8)+'"/>'; }
         if(a.kind==='band'){ const pa=S[a.a], pb=S[a.b]; att+='<path class="fa-band" d="'+capsule(pa,pb,2,2)+'"/>'; }
+        if(a.kind==='tether'){ const pa=S[a.a], pb=P(a.to); att+='<path class="fa-band" d="'+capsule(pa,pb,2,2)+'"/>'; } // band from a joint to a fixed anchor
         if(a.kind==='stick'){ const pa=S[a.a], pb=S[a.b]; const ex=a.ext||10; const dx=pb[0]-pa[0], dy=pb[1]-pa[1], l=Math.hypot(dx,dy)||1;
           const o2=a.off||0; const nx=-dy/l*o2, ny=dx/l*o2;
           att+='<path class="fa-stick" d="'+capsule([pa[0]-dx/l*ex+nx, pa[1]-dy/l*ex+ny],[pb[0]+dx/l*ex+nx, pb[1]+dy/l*ex+ny],2.2,2.2)+'"/>'; }

@@ -33,6 +33,7 @@ M['Exact exercise name'] = {
   props:[ {box:[x0,x1,y0,y1,z0,z1], k:'soft'|'wall'|'towel'|undefined, noFit:true?, front:true?},
           {cyl:[[x,y,z],[x,y,z]], r:4, k:'towel'} ],
   att:[ {kind:'band', a:'lKnee', b:'rKnee', chain:'rLeg'},   // loop band (blue line)
+        {kind:'tether', a:'rKnee', to:[x,y,z], chain:'rLeg'},       // band from a joint to a fixed anchor (Spanish squat)
         {kind:'kb', at:'rWr', chain:'rArm'},                 // kettlebell hanging from a wrist
         {kind:'cuff', at:'rAnk', chain:'rLeg'},              // ankle weight
         {kind:'stick', a:'head', b:'pelvis', off:-14, ext:12, chain:'torso'}, // broomstick (off = sideways offset in screen units)

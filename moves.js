@@ -440,7 +440,7 @@ M['Pogo hops'] = {
 
 M['Skipping'] = {
   hl:['rToes','rShin'],
-  base:Object.assign(P.stand(), {root:[0,97,2], lL:{pl:[10,0,13], hl:22}, rL:{pl:[-10,0,13], hl:22},
+  base:Object.assign(P.stand(), {root:[0,97,2], lL:{pl:[10,0,13], hl:26}, rL:{pl:[-10,0,13], hl:26},
     lA:{s:[10,30,0], e:35}, rA:{s:[10,30,0], e:35}}),
   poses:{
     r:{root:[0,97,2], rL:{pl:[-10,0,14], hl:22}, lL:{pl:[10,9,10], hl:40}},
@@ -1204,3 +1204,90 @@ M['Prone Y-W-T'] = {
   // front-on, a torso highlight reads as a blob; the figure alone is clearer
   ['Side plank','Side plank, knees bent','Side plank + leg lift'].forEach(n=>{ if(M[n]) M[n].hl=[]; });
 })(window.MOVES);
+
+// ---------- Knee-tendon ladder (v3): holds, slow two-leg reps, decline and single-leg work ----------
+(function(M, P){
+const C=o=>JSON.parse(JSON.stringify(o));
+const ARM={s:[4,6,0], e:12};
+const slow=(name, src, dn, up)=>{ if(!M[src]) return; const m=C(M[src]); const [a,b]=[m.seq[1][0], m.seq[0][0]];
+  m.seq=[[b,0.6],[a,dn],[a,0.4],[b,up]]; M[name]=m; };
+slow('Slow high box squat','High box squat',3,3);
+slow('Slow box squat to a chair','Box squat to a chair',3,3);
+slow('Slow split squat','Split squat',3,3);
+if(M['Rear-foot-elevated split squat']) M['Rear-foot-elevated split squat'].seq=[['up',1],['down',3],['down',0.3],['up',2]];
+if(M['Step-down']) M['Step-down'].seq=[['top',1],['down',3],['down',0.3],['top',2]];
+
+// Split squat hold: settle to a shallow split stance and hold, small breathing pulse.
+if(M['Split squat']){
+  const m=C(M['Split squat']);
+  m.base=Object.assign(m.base, {root:[0,66,-14], pel:[2,0,0]});
+  m.poses={hold:{}, settle:{root:[0,65.4,-14]}};
+  m.seq=[['hold',2],['settle',2]];
+  M['Split squat hold']=m;
+}
+
+// Spanish squat: band behind the knees anchored in front, sit back with vertical shins.
+const ANCHOR=[0,52,88];
+const spanishProps=[{box:[-14,14,0,150,86,92], k:'wall', noFit:true}];
+const spanishDown={root:[0,62,-40], pel:[2,0,0], sp:[-4,0,0], nk:[-6,0], lA:{s:[80,6,0], e:10}, rA:{s:[80,6,0], e:10}};
+M['Spanish squat']={
+  props:spanishProps,
+  att:[{kind:'tether', a:'rKnee', to:ANCHOR, chain:'rLeg'}],
+  hl:['rThigh','lThigh'],
+  base:Object.assign(P.stand(), {root:[0,94.6,-4], lL:{pl:[10,0,13]}, rL:{pl:[-10,0,13]}}),
+  poses:{ up:{}, down:spanishDown },
+  seq:[['up',0.6],['down',3],['down',0.4],['up',3]],
+};
+M['Spanish squat hold']={
+  props:spanishProps,
+  att:[{kind:'tether', a:'rKnee', to:ANCHOR, chain:'rLeg'}],
+  hl:['rThigh','lThigh'],
+  base:Object.assign(P.stand(), {lL:{pl:[10,0,13]}, rL:{pl:[-10,0,13]}}, spanishDown),
+  poses:{ hold:{}, settle:{root:[0,61.4,-40]} },
+  seq:[['hold',2],['settle',2]],
+};
+
+// Deeper wall sit (stand-in for the Spanish squat hold): thighs near parallel, shins vertical.
+if(M['Wall sit']){
+  const m=C(M['Wall sit']);
+  m.base=Object.assign(m.base, {root:[0,58,-22], rL:{pl:[-10,0,36]}, lL:{pl:[10,0,36]}});
+  m.poses={out:{}, in:{root:[0,58.6,-22], ch:[-4,0,0], nk:[-3,0]}};
+  M['Wall sit, 90° hold']=m;
+}
+
+// Decline squat: heels up on books / slant board, upright torso, knees travel forward.
+const BOOKS={box:[-18,18,0,6,-10,7], k:'soft'};
+const declineStand={root:[0,99,-4], pel:[0,0,0], sp:[0,0,0], nk:[0,0],
+  lL:{pl:[10,0,13], hl:26}, rL:{pl:[-10,0,13], hl:26}, lA:C(ARM), rA:C(ARM)};
+M['Decline squat']={
+  props:[BOOKS],
+  hl:['rThigh','lThigh'],
+  base:declineStand,
+  poses:{ up:{}, down:{root:[0,70,-14], pel:[16,0,0], sp:[2,0,0], nk:[-8,0], lA:{s:[70,6,0], e:10}, rA:{s:[70,6,0], e:10}} },
+  seq:[['up',0.6],['down',3],['down',0.4],['up',3]],
+};
+M['Loaded decline squat']=Object.assign(C(M['Decline squat']), {
+  poses:{ up:{lA:{s:[40,10,0], e:110}, rA:{s:[40,10,0], e:110}},
+          down:{root:[0,70,-14], pel:[14,0,0], sp:[0,0,0], nk:[-8,0], lA:{s:[40,10,0], e:110}, rA:{s:[40,10,0], e:110}} },
+});
+
+// Single-leg decline squat: right foot on the books, left leg held forward off the floor.
+const slStand={root:[-3,99,-4], pel:[2,0,0], sp:[0,0,0], nk:[0,0],
+  rL:{pl:[-7,0,13], hl:26}, lL:{h:[35,0,0], k:25, a:0}, lA:{s:[30,10,0], e:10}, rA:{s:[30,10,0], e:10}};
+const slDown={root:[-3,74,-14], pel:[18,0,0], sp:[4,0,0], nk:[-10,0], lL:{h:[70,0,0], k:20, a:0},
+  lA:{s:[80,8,0], e:5}, rA:{s:[80,8,0], e:5}};
+M['Single-leg decline squat']={
+  props:[{box:[-18,4,0,6,-10,7], k:'soft'}],
+  hl:['rThigh'],
+  base:slStand,
+  poses:{ up:{}, down:slDown },
+  seq:[['up',0.6],['down',3],['down',0.3],['up',2]],
+};
+M['Single-leg decline squat, two-leg up']=Object.assign(C(M['Single-leg decline squat']), {
+  seq:[['up',0.6],['down',4],['down',0.3],['up',1.6]],
+});
+M['Loaded single-leg decline squat']=Object.assign(C(M['Single-leg decline squat']), {
+  att:[{kind:'kb', at:'rWr', chain:'rArm'}],
+  poses:{ up:{rA:{s:[0,8,0], e:4}}, down:Object.assign(C(slDown), {rA:{s:[10,8,0], e:4}}) },
+});
+})(window.MOVES, window.POSE);

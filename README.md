@@ -4,7 +4,7 @@ A personal home strength & rehab app. One HTML file, no build step, no accounts,
 
 ## The program
 
-Version 2 (Sep 2026) is rebuilt around a right-knee patellofemoral pain flare and a big-toe (1st MTP) push-off problem. It follows the JOSPT 2019 patellofemoral pain guideline and the BJSM 2024 best-practice guide: hip plus knee strengthening, about 3 times a week, for 6–12 weeks.
+Version 3 (Oct 2026) rebuilds the knee work around the right patellar tendon (previously told it's damaged; it flares after single-leg squats but tolerates wall sits). It follows the patellar tendinopathy evidence: progressive loading (heavy slow resistance over eccentric-only), guided by a pain-monitoring model where up to 3/10 is fine if it's back to normal by the next morning. The big-toe (1st MTP) push-off ladder and the rest of the week are unchanged from version 2.
 
 | Day | Session | Focus |
 |-----|---------|-------|
@@ -16,15 +16,20 @@ Version 2 (Sep 2026) is rebuilt around a right-knee patellofemoral pain flare an
 | Sat | Conditioning + Upper | 3 low-impact rounds using the push/pull rungs, or a long walk |
 | Sun | Rest | — |
 
-- **Knee ladder** is ordered by patellofemoral load (Song 2023): high box squat → step-up → chair box squat → split squat → step-down → RFESS → skater squat.
+- **Knee ladder** has four stages for the tendon:
+  1. Holds: split squat hold → Spanish squat hold (stand-in without the band: 90° wall sit).
+  2. Slow two-leg reps (3s down, 3s up): high box squat → chair box squat → split squat → decline squat (slant board or heels on books) → Spanish squat (stand-in: loaded decline squat).
+  3. Heavier and single-leg: step-down → single-leg decline squat, two-leg up → single-leg decline squat → RFESS → loaded single-leg decline squat → skater squat.
+  4. Springy work: pogo hops, skipping and strides in the toe ladder, which won't level past rung 4 until the knee reaches the single-leg decline squat.
+- **Next-morning knee check.** The knee ladder doesn't move on the post-session rating alone. The morning after a knee session, Today asks how the knee is compared with before it. Moving up needs "Easy" plus 2 settled mornings in a row (3 in stage 1). Still sore or worse drops a rung; worse also offers knee mode. A check missed for 3+ days lapses.
 - **Big-toe push-off ladder** builds loaded toe extension: seated toe-bend raise → towel-roll heel raises → supported toe-tuck rocks → pogo → skipping → strides.
-- **My kit** (loop bands, ankle weights, kettlebell) switches on exercises that need them.
+- **My kit** (loop bands, heavy band + door anchor, slant board, ankle weights, kettlebell) switches on exercises that need them. Rungs that need kit you haven't ticked use a kit-free stand-in.
 - **Benchmarks** every 2 weeks: single-leg calf raises to fatigue (with metronome), toe-tuck kneel pain, step-down pain and knee drift, haunches pain.
 - A pain traffic light (≤3/10 and settled by morning = fine; 4–5 = stay or drop a rung; 6+/sharp = stop today) governs everything. After each session the app asks how each ladder felt and levels you up or down.
 
 - **Knee mode** for flare-ups (e.g. patellar-tendon pain just below the kneecap). Turn it on from Today (it's offered when the knee is logged at 3+/10) or the Library. It swaps the knee rung and squat-type drills for shallow isometric wall sits (5 × 45s), swaps quick step-ups for marching, pauses knee levelling, and adds a morning half-squat check. Three knee scores of ≤2 in a row end it automatically and restart the knee ladder one rung below where it was.
 
-Existing data migrates automatically: knee and calf rungs are remapped to the new ladders (knee capped at rung 3 while it's flaring).
+Existing data migrates automatically. Moving to v3 restarts the knee ladder at stage 1 and caps the toe ladder below pogo hops until the knee is ready.
 
 ## Looking ahead
 

@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pg.on('console', lambda m: errs.append('console: '+m.text) if m.type=='error' else None)
     # existing-user data so the migration/what's-new modal doesn't show
     pg.goto(url)
-    pg.evaluate("""()=>{ localStorage.clear(); localStorage.setItem('sturdy.onboarded','true'); localStorage.setItem('sturdy.progv','2');
+    pg.evaluate("""()=>{ localStorage.clear(); localStorage.setItem('sturdy.onboarded','true'); localStorage.setItem('sturdy.progv','3');
       localStorage.setItem('sturdy.history', JSON.stringify([{d:'2026-09-21',id:'lowerA',title:'Rehab A: Knee & Hip',mins:34}]));
       localStorage.setItem('sturdy.sound', JSON.stringify('mute')); }""")
     pg.reload(); pg.wait_for_timeout(400)

@@ -71,6 +71,14 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-of
 .card p strong{color:var(--ink)}
 .knee-card{border-color:color-mix(in srgb, var(--rest) 55%, var(--line))}
 .knee-card .eyebrow{color:var(--rest)}
+.gate-btns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:10px}
+.gate-btns button{font:inherit; font-size:.85rem; font-weight:600; padding:12px 6px; border-radius:12px; border:1px solid var(--line); background:var(--bg3); color:var(--ink); cursor:pointer; line-height:1.2}
+.gate-btns button:active{transform:scale(.97)}
+.gate-btns button[data-gate="ok"]{border-color:color-mix(in srgb, var(--good) 60%, var(--line))}
+.gate-btns button[data-gate="worse"]{border-color:color-mix(in srgb, var(--alert) 50%, var(--line))}
+.stage-h{font-size:.78rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--rest); margin:12px 0 2px}
+.stage-h span{font-weight:500; text-transform:none; letter-spacing:0; color:var(--ink3)}
+.stage-note{font-size:.82rem; color:var(--ink2); margin:10px 0 0}
 .km-note{font-size:.84rem !important}
 .km-lib{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
 .link-btn{background:none; border:none; padding:8px 4px; color:var(--ink3); font-size:.85rem; text-decoration:underline; text-underline-offset:3px}
@@ -515,6 +523,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
       <div class="stat"><div class="v num" id="st-streak">0</div><div class="l">week streak</div></div>
     </div>
 
+    <div class="card knee-card" id="gate-card" hidden></div>
     <div class="today-hero">
       <div class="eyebrow" id="today-eyebrow">Today</div>
       <h2 id="today-title"></h2>
@@ -568,9 +577,10 @@ button.ws{padding:4px 0 2px; border-radius:12px}
     <div class="card">
       <div class="eyebrow">Why this plan</div>
       <h3>Right knee</h3>
-      <p>Pain in deep bends and when you tense the quad, crackling, a slow onset, and no swelling or giving way: that fits <strong>patellofemoral pain</strong>, irritation where the kneecap glides on the thigh bone. It’s the most common knee pain in active adults. It’s a load problem, not wear and tear.</p>
-      <p>The best evidence (JOSPT 2019 guideline; BJSM 2024 best-practice guide) is <strong>hip and knee strengthening, about 3 times a week, for 6–12 weeks</strong>. Higher-volume programs did better. Hence three rehab days, a knee ladder ordered from least to most kneecap load, and a side-of-hip ladder for the inward knee drift.</p>
-      <p>The crackling is common in pain-free knees too (about a third have it). It isn’t a sign of damage and isn’t a reason to avoid loading.</p>
+      <p>You were told the <strong>patellar tendon</strong>, just below the kneecap, is damaged. The pattern fits: fine with wall sits, irritated by anything harder, like single-leg squats. Tendons get stronger with load, but they adapt slowly and react a day later, so they need patient, measured loading rather than rest.</p>
+      <p>The plan follows the evidence for patellar tendon pain: <strong>progressive loading</strong> (heavy and slow beats eccentric-only), guided by a pain-monitoring rule. Pain up to 3/10 during is fine, as long as it’s <strong>back to normal by the next morning</strong> and not creeping up week to week. Expect this to take months, not weeks.</p>
+      <p>So the knee ladder has four stages: holds, then slow two-leg reps, then heavier single-leg work, then springy work. It only moves up after settled mornings. The side-of-hip ladder still helps keep the knee tracking straight.</p>
+      <p>Pain with the knee held <em>straight</em> isn’t typical of the tendon alone, so if that persists, or there’s no clear progress in 6–8 weeks, get it re-checked by a sports physio.</p>
       <h3>Big toe</h3>
       <p>The kick injured the big toe’s main joint and the tissue under it. It moves fine unloaded. What’s missing is strength when it’s bent back <em>under load</em>, which is sprint push-off or kneeling on tucked toes. The <strong>Big-toe push-off</strong> ladder rebuilds exactly that, a little more range and load each rung. The evidence here is thin (expert opinion, not trials), so the benchmarks are how we’ll know it’s working.</p>
       <h3>Back and hamstring</h3>
@@ -583,7 +593,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
         <li><strong>Avoid sitting on your haunches</strong> and deep squatting outside the app. Deep bends under load are what the kneecap likes least. Depth comes back as the knee ladder climbs.</li>
         <li><strong>Don’t kneel on tucked toes</strong> outside the app. The toe ladder brings that position back gradually.</li>
         <li>Stairs and your 10k steps are fine. Keep them.</li>
-        <li>Judge progress by the fortnightly benchmarks, not day to day. Kneecap pain usually takes 6–12 weeks to settle.</li>
+        <li>Judge progress by the morning checks and the fortnightly benchmarks, not day to day. Tendons take months to rebuild.</li>
       </ul>
     </div>
 
@@ -598,13 +608,14 @@ button.ws{padding:4px 0 2px; border-radius:12px}
     <div class="card">
       <div class="eyebrow">When to level up</div>
       <p>Finish all sets at the top of the range, feeling like you had <strong>2–3 more reps in the tank</strong> and within the green light, two sessions in a row. Then take the next rung. The app asks after each workout. Be honest in both directions.</p>
+      <p><strong>The knee is stricter.</strong> Tendons react the next day, so it also needs the next morning to be back to normal: “Easy” plus 2 settled mornings in a row (3 in stage 1). Sore the next morning drops it a rung.</p>
     </div>
 
     <div class="card">
       <div class="eyebrow">Back to running and football</div>
       <p>Running puts about 4–5× bodyweight through the kneecap, and it’s the same toe push-off that re-hurt it. So it’s gated:</p>
       <ol class="gates">
-        <li><strong>25 single-leg calf raises each side</strong>, toe kneel ≤2/10 and step-downs ≤2/10 → start pogo hops (toe ladder).</li>
+        <li><strong>25 single-leg calf raises each side</strong>, toe kneel ≤2/10, step-downs ≤2/10, and the knee ladder at the single-leg decline squat → start pogo hops (toe ladder).</li>
         <li><strong>3 × 20s pogo hops, fine the next morning</strong> → walk-jog: 1 min jog / 1 min walk × 8, three times a week. Add a minute of jogging per block each week while it stays green.</li>
         <li><strong>20 min easy continuous jog</strong> plus comfortable skipping → strides at 70–80%, then 90%.</li>
         <li><strong>Strides feel normal</strong> → turning and cutting drills, then a training session before a match. Stiff-soled boots or a carbon insole protect the toe.</li>
@@ -710,23 +721,31 @@ button.ws{padding:4px 0 2px; border-radius:12px}
 <script>
 'use strict';
 /* =====================================================================
-   Data — the program (v2: knee = patellofemoral pain, toe = 1st MTP push-off)
+   Data — the program (v3: knee = patellar tendon, staged loading; toe = 1st MTP push-off)
    ===================================================================== */
-const PROGRAM_VERSION = 2;
+const PROGRAM_VERSION = 3;
 
 // Leveled slots: pick the rung, the app writes the workout.
 const LADDERS = {
   knee: {
-    name:'Knee strength', area:'Knees',
-    why:'Ordered from least to most kneecap load, so the early rungs keep the knee in shallower bends while it settles. Depth comes back rung by rung. Kneecap pain responds to steady loading over 6–12 weeks, not to rest.',
+    name:'Knee strength', area:'Knee tendon',
+    why:'Four stages for the knee tendon: steady holds, then slow two-leg reps, then heavier single-leg work, then springy work. It only moves up after settled next mornings, so one session that felt fine can’t jump you into something the tendon isn’t ready for.',
     levels:[
-      {n:'High box squat', mode:'reps', reps:'15', sets:3, d:'Sit back to a high seat (bed edge or sofa arm) so the knees only bend about 60°', cues:['3s down, light touch, stand tall','Knees track over the middle toes','Hold a backpack or kettlebell at your chest when 3×15 is easy']},
-      {n:'Step-up', mode:'reps', reps:'12 / side', sets:3, d:'Bottom stair: whole foot on the step, stand up tall, step back down', cues:['Push through the heel of the top foot','Don’t spring off the back foot','Keep the knee over the toes (check it in a mirror)']},
-      {n:'Box squat to a chair', mode:'reps', reps:'12', sets:3, d:'Normal chair height (about 90° at the knee). 3s down, touch, stand', cues:['Sit back, not down','Weight through the whole foot','Add a backpack or kettlebell at 3×12']},
-      {n:'Split squat', mode:'reps', reps:'10 / side', sets:3, d:'Long stance, lower the back knee toward the floor, only as deep as stays ≤3/10', cues:['Torso tall, front heel heavy','Go a little deeper each week','Fold a towel under the back knee']},
-      {n:'Step-down', mode:'reps', reps:'10 / side', sets:3, d:'Stand on the bottom stair, slowly lower the free heel to tap the floor', cues:['3s down','Knee stays over the middle toes, don’t let it drift in','Light hand on the rail for balance only']},
-      {n:'Rear-foot-elevated split squat', mode:'reps', reps:'8 / side', sets:3, d:'Back foot on the sofa or a chair', cues:['Front shin fairly vertical','Down until the back knee nears the floor','Hold a kettlebell when 3×8 is easy']},
-      {n:'Skater squat', mode:'reps', reps:'6 / side', sets:3, d:'Single-leg squat, back knee reaches to a cushion behind you', cues:['Arms reach forward as a counterweight','Touch the cushion softly','Half range counts. This is the top rung']},
+      {n:'Split squat hold', stage:1, mode:'time', secs:30, sets:3, perSide:true, d:'Split stance, lower until the front knee is bent about 60°, back knee well off the floor. Hold it firmly', cues:['Press the front foot into the floor as if sliding it forward','Knee ≤3/10 during, and settled by the next morning','Torso tall, front knee over the middle toes']},
+      {n:'Spanish squat hold', stage:1, needs:'heavyband', mode:'time', secs:45, sets:5, d:'Long band round a sturdy anchor (door anchor or heavy table leg) and behind both knees. Step back, then sit back into the band, shins vertical, knees bent about 70–90°. Hold', cues:['Shins stay vertical, sit back into the band','Chest tall, lean back slightly','Knee ≤3/10, settled by the next morning'],
+        alt:{n:'Wall sit, 90° hold', mode:'time', secs:45, sets:5, d:'Back on the wall, thighs close to parallel with the floor, shins vertical. Hold firmly', cues:['Deeper than your usual wall sit, but only as deep as stays ≤3/10','Push the floor away through the whole foot','Becomes the Spanish squat once you tick the heavy band in My kit']}},
+      {n:'Slow high box squat', stage:2, mode:'reps', reps:'12', sets:3, d:'Sit back to a high seat (bed edge or sofa arm) so the knees bend about 60°. 3s down, light touch, 3s up', cues:['Slow both ways, no bouncing off the seat','Knees track over the middle toes','Hold a backpack at your chest when 3×12 is easy']},
+      {n:'Slow box squat to a chair', stage:2, mode:'reps', reps:'10', sets:3, d:'Normal chair height (about 90° at the knee). 3s down, touch, 3s up', cues:['Sit back, not down','Weight through the whole foot','Hold a backpack or kettlebell when 3×10 is easy']},
+      {n:'Slow split squat', stage:2, mode:'reps', reps:'8 / side', sets:3, d:'Long stance. 3s down toward the floor, 3s up, only as deep as stays ≤3/10', cues:['Torso tall, front heel heavy','A little deeper each week','Fold a towel under the back knee']},
+      {n:'Decline squat', stage:2, mode:'reps', reps:'10', sets:3, d:'Heels on a slant board, or on two thick books (heels about 5cm up). Squat to about 60–70° knee bend. 3s down, 3s up', cues:['Torso upright, so the knees travel forward over the toes','This targets the tendon just below the kneecap. Feeling it there is normal, ≤3/10','Light hand on a door frame for balance']},
+      {n:'Spanish squat', stage:2, needs:'heavyband', mode:'reps', reps:'10', sets:3, d:'Band behind both knees, as for the hold. Sit back to about 90°. 3s down, 3s up', cues:['Shins vertical the whole time','Lean back into the band','Hold a kettlebell at your chest when 3×10 is easy'],
+        alt:{n:'Loaded decline squat', mode:'reps', reps:'10', sets:3, d:'Decline squat (slant board or books) holding a loaded backpack or kettlebell at your chest. 3s down, 3s up', cues:['Same depth as before, just heavier','Torso upright','Becomes the Spanish squat once you tick the heavy band in My kit']}},
+      {n:'Step-down', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'Stand on the bottom stair and slowly lower the free heel to tap the floor', cues:['3s down, 2s up','Knee stays over the middle toes, don’t let it drift in','Your first single-leg rung, so be honest at the morning check']},
+      {n:'Single-leg decline squat, two-leg up', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'On one leg on the slant board or books, lower slowly over 4s to about 60°. Put the other foot down and stand up on both', cues:['All the work is in the slow lowering','Torso upright, knee over the middle toes','Light hand on a wall for balance']},
+      {n:'Single-leg decline squat', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'Same, but stand back up on the one leg', cues:['3s down, 2s up','About 60° of knee bend','The biggest tendon load so far. The next morning tells you if it’s right']},
+      {n:'Rear-foot-elevated split squat', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'Back foot on the sofa or a chair. 3s down, 2s up', cues:['Front shin fairly vertical','Down until the back knee nears the floor','Hold a kettlebell when 3×8 is easy']},
+      {n:'Loaded single-leg decline squat', stage:3, mode:'reps', reps:'6 / side', sets:4, d:'Single-leg decline squat holding a loaded backpack or kettlebell', cues:['Heavy and slow builds tendon capacity','3s down, 2s up','Add weight rather than reps']},
+      {n:'Skater squat', stage:3, mode:'reps', reps:'6 / side', sets:3, d:'Single-leg squat, back knee reaches to a cushion behind you', cues:['Arms reach forward as a counterweight','Touch the cushion softly','The top rung. Springy work (stage 4) is next']},
     ]
   },
   hip: {
@@ -945,6 +964,8 @@ const REHAB_IDS = ['lowerA','lowerB','lowerC'];
 const KIT = [
   {k:'band',  n:'Loop resistance bands', p:'~£10', why:'Side-of-hip work, the missing piece for the knee.', unlocks:'Lateral band walks (Wed); band on clamshells'},
   {k:'ankle', n:'Adjustable ankle weights', p:'~£25', why:'Pouch-style, so there’s nothing to faff with. Loads the quads in the range easiest on the kneecap.', unlocks:'Seated knee extensions (Mon; replaces Friday’s wall sit); heavier side-lying raises'},
+  {k:'heavyband', n:'Long heavy band + door anchor', p:'~£15', why:'For Spanish squats: the band behind your knees lets you sit back and load the knee tendon hard while sparing the knee joint.', unlocks:'Spanish squat hold and reps (knee ladder rungs 2 and 7)'},
+  {k:'slant', n:'Slant board', p:'~£25', why:'Raising the heels shifts squat load onto the knee tendon, the standard rehab position. Two thick books under the heels do the job until then.', unlocks:'Steadier, steeper decline squats in place of the books'},
   {k:'kb',    n:'Kettlebell, 16 kg', p:'~£40', why:'A fixed weight with nothing to adjust. Add a heavier one later if you want.', unlocks:'Suitcase carries (Tue); weighted calf raises, squats and bridges'},
 ];
 
@@ -958,13 +979,19 @@ const TESTS = [
 ];
 const DRIFT = ['No','A bit','Yes'];
 
+// Knee ladder stages. Stage 4 (springy work) lives in the toe ladder and unlocks at KNEE_SPRING.
+const KNEE_STAGES = {1:{t:'Holds', d:'steady holds calm the tendon'}, 2:{t:'Slow two-leg reps', d:'3s down, 3s up'}, 3:{t:'Heavier, single-leg', d:'more load through one tendon'}};
+const TOE_SPRING  = LADDERS.toe.levels.findIndex(v=>v.n==='Pogo hops');
+const KNEE_SPRING = LADDERS.knee.levels.findIndex(v=>v.n==='Single-leg decline squat');
+const passesNeeded = i => LADDERS.knee.levels[i].stage===1 ? 3 : 2;
+
 const REHAB_TIPS = [
   'Toe: skip kneeling on tucked toes outside the app for now. That’s the position the toe ladder is rebuilding, rung by rung.',
   'Knees: avoid sitting on your haunches for the next few weeks. Use a low stool instead. Depth comes back as the knee ladder climbs.',
   'Knee crackling is common in pain-free knees too, about a third of them. It isn’t a sign of damage and isn’t a reason to avoid loading.',
   'Back: after a disc injury, mornings are the fragile window. Avoid deep toe-touches in the first hour after waking; hinge instead.',
   'Hamstring: the slow slide OUT on slider curls is the medicine. Never rush it.',
-  'Kneecap pain usually takes 6–12 weeks of steady loading to settle. Judge it by the fortnightly benchmarks, not day to day.',
+  'Knee tendons adapt slowly and react a day later. That’s why the morning check, not how the session felt, decides when the knee ladder moves.',
   'Mon, Wed and Fri are the rehab days. If the week gets squeezed, protect those three.',
   'Balance work is toe rehab in disguise: barefoot single-leg stands while brushing your teeth.',
   'Stairs are fine. If the knee is grumpy one day, take them one at a time with a hand on the rail.',
@@ -984,11 +1011,17 @@ let kit     = store.get('kit', {});      // {band:true, ...}
 let tests   = store.get('tests', []);    // [{d, calfL, calfR, toeKneel, stepDown, drift, haunch}]
 let blockStart = store.get('blockStart', null);
 let kneeMode = store.get('kneeMode', null);  // {since, rung} while the knee is flaring, else null
+// Knee ladder only moves on settled next mornings. pending = the last knee session awaiting its morning check.
+let kneeGate = store.get('kneeGate', null) || {passes:0, pending:null, result:null};
+const saveGate = () => store.set('kneeGate', kneeGate);
 const AREAS = [ ['toe','Big toe'], ['knee','Knees'], ['back','Lower back'], ['ham','Hamstring'] ];
 
 // Ask the browser not to evict our data under storage pressure.
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 const lvl = id => Math.max(0, Math.min(levels[id]||0, LADDERS[id].levels.length-1));
+// A rung that needs kit you haven't ticked swaps to its kit-free stand-in.
+function rungDef(id, i){ const v=LADDERS[id].levels[i]; return (v.needs && !kit[v.needs] && v.alt) ? v.alt : v; }
+const curDef = id => rungDef(id, lvl(id));
 
 const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const todayISO = () => iso(new Date());
@@ -997,28 +1030,32 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const daysBetween = (a,b) => Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
 const fmtDay = d => new Date(d+'T12:00').toLocaleDateString(undefined,{day:'numeric', month:'short'});
 
-/* ---- one-off migration from program v1 ---- */
+/* ---- one-off migrations between program versions ---- */
 function migrate(){
   const v = store.get('progv', 1);
   if(v >= PROGRAM_VERSION) return null;
-  const note = {};
-  // Knee ladder was [wall sit, tempo box squat, split squat, step-down, RFESS, skater];
-  // now ordered by kneecap load. The knee is flaring, so restart in the low-load rungs.
-  if(typeof levels.knee==='number'){
-    const map=[0,2,3,4,5,6];
-    levels.knee = Math.min(map[Math.min(levels.knee,5)], 2);
+  const note = {from:v};
+  if(v < 2){
+    // Calf ladder was [slow, single-leg, off a step, pogo, strides]. Plyos moved to the toe ladder.
+    if(typeof levels.calf==='number'){
+      const old = levels.calf;
+      levels.calf = Math.min(old, 2);
+      levels.toe = old>=1 ? 1 : 0;
+    }
   }
-  // Calf ladder was [slow, single-leg, off a step, pogo, strides]. Plyos move to the new toe ladder.
-  if(typeof levels.calf==='number'){
-    const old = levels.calf;
-    levels.calf = Math.min(old, 2);
-    levels.toe = old>=1 ? 1 : 0;
+  if(v < 3){
+    // Knee ladder rebuilt into staged tendon loading. Single-leg squats flared it, so restart at stage 1.
+    levels.knee = 0;
+    if(kneeMode){ kneeMode.rung = 0; store.set('kneeMode', kneeMode); }
+    // Springy toe rungs (pogo, skipping, strides) now wait for the knee.
+    if(typeof levels.toe==='number' && levels.toe >= TOE_SPRING){ levels.toe = TOE_SPRING-1; note.toeCapped = true; }
+    kneeGate = {passes:0, pending:null, result:null}; saveGate();
   }
   store.set('levels', levels);
   if(!blockStart){ blockStart = todayISO(); store.set('blockStart', blockStart); }
   store.set('progv', PROGRAM_VERSION);
-  note.knee = LADDERS.knee.levels[lvl('knee')].n;
-  note.toe = LADDERS.toe.levels[lvl('toe')].n;
+  note.knee = curDef('knee').n;
+  note.toe = curDef('toe').n;
   return note;
 }
 const migrated = migrate();
@@ -1026,7 +1063,7 @@ const migrated = migrate();
 /* =====================================================================
    Session building
    ===================================================================== */
-function blockDef(b){ return b.slot ? LADDERS[b.slot].levels[lvl(b.slot)] : DRILLS[b.drill]; }
+function blockDef(b){ return b.slot ? curDef(b.slot) : DRILLS[b.drill]; }
 function blockActive(b){ if(b.h) return true; if(b.unless && kit[b.unless]) return false; const d=blockDef(b); const need=b.needs||d.needs; return !need || !!kit[need]; }
 
 /* ---- knee mode: while the knee tendon is flaring, swap knee loading for isometric holds ----
@@ -1050,16 +1087,19 @@ function kneeLogs(){ return kneeMode ? painLog.filter(p=>p.d>=kneeMode.since && 
 function kneeSuggest(){
   if(kneeMode) return false;
   const p=lastPain(); if(!p || typeof p.knee!=='number') return false;
+  if(kneeGate.result && kneeGate.result.km && kneeGate.result.d===todayISO()) return false; // the morning-check card is already offering it
   return p.knee>=3 && daysBetween(p.d, todayISO())<=2 && store.get('kneeDismissed',null)!==p.d;
 }
 function startKneeMode(){
   kneeMode={since:todayISO(), rung:lvl('knee')};
+  kneeGate={passes:0, pending:null, result:null}; saveGate();
   store.set('kneeMode', kneeMode); render(); toast('Knee mode on');
 }
 function endKneeMode(auto){
   if(!kneeMode) return;
   // ease back in one rung below where you were
   levels.knee=Math.max(0, kneeMode.rung-1); store.set('levels', levels);
+  kneeGate.passes=0; kneeGate.pending=null; saveGate();
   kneeMode=null; store.set('kneeMode', null);
   store.set('kneeEnded', {d:todayISO(), auto:!!auto});
   render();
@@ -1075,6 +1115,72 @@ function logKnee(v){
   if(e) e.knee=v; else { painLog.push({d, knee:v}); painLog.sort((a,b)=>a.d<b.d?-1:1); }
   store.set('pain', painLog);
   checkKneeExit(); render();
+}
+
+/* ---- knee gate: the knee ladder moves on next-morning checks, not on how the session felt ----
+   After a knee session the rung waits for the next morning. Back to normal = a pass.
+   Up a rung needs "Easy" plus passesNeeded() settled mornings in a row. Sore next morning = down a rung. */
+function kneeSessionDone(choice){
+  const cur=lvl('knee');
+  if(choice==='down'){ levels.knee=Math.max(0,cur-1); kneeGate.passes=0; }
+  kneeGate.pending={d:todayISO(), rung:lvl('knee'), rating:choice||'keep'};
+  kneeGate.result=null; saveGate();
+}
+const gateDue = () => !kneeMode && kneeGate.pending && kneeGate.pending.d < todayISO();
+// A missed check (3+ days on) can't tell us about the next morning, so it quietly lapses.
+function expireGate(){
+  const p=kneeGate.pending;
+  if(p && daysBetween(p.d, todayISO())>2){ kneeGate.pending=null; saveGate(); }
+}
+function resolveGate(ans){
+  const p=kneeGate.pending; if(!p) return;
+  const L=LADDERS.knee, cur=lvl('knee'), name=i=>esc(rungDef('knee',i).n);
+  let msg='', km=false;
+  if(ans==='ok'){
+    kneeGate.passes = p.rating==='down' ? 1 : kneeGate.passes+1;
+    const need=passesNeeded(cur), n=kneeGate.passes;
+    if(p.rating==='up' && n>=need && cur===p.rung && cur<L.levels.length-1){
+      levels.knee=cur+1; kneeGate.passes=0;
+      const st=L.levels[cur+1].stage;
+      msg='Settled '+need+' mornings in a row. You’re up to <strong>'+name(cur+1)+'</strong>.'+
+        (st!==L.levels[cur].stage ? ' That starts <strong>Stage '+st+': '+esc(KNEE_STAGES[st].t)+'</strong>. Go gently the first time.' : '');
+    } else if(n>=need && cur<L.levels.length-1){
+      msg='Settled. Ready to move up: rate the knee “Easy” after your next session, if it honestly is.';
+    } else if(p.rating==='down'){
+      msg='Settled. You stay on <strong>'+name(cur)+'</strong> and build from here.';
+    } else {
+      msg='Settled. That’s '+Math.min(n,need)+' of '+need+' settled mornings in a row on <strong>'+name(cur)+'</strong>.';
+    }
+  } else {
+    kneeGate.passes=0;
+    const drop = p.rating!=='down' && cur>0;
+    if(drop) levels.knee=cur-1;
+    msg = drop ? 'That was a bit much. You’re back on <strong>'+name(cur-1)+'</strong> for now, and it moves up again after settled mornings.'
+               : 'You stay on <strong>'+name(cur)+'</strong> for now.';
+    if(ans==='worse'){ km=true; msg+=' If it’s still grumbling tomorrow, knee mode swaps the squats for shallow holds until it calms down.'; }
+  }
+  kneeGate.pending=null; kneeGate.result={d:todayISO(), ans, msg, km};
+  store.set('levels', levels); saveGate(); buzz(8); render();
+}
+function renderGateCard(){
+  const c=$('#gate-card'); expireGate();
+  const r=kneeGate.result;
+  if(gateDue()){
+    const p=kneeGate.pending, when=daysBetween(p.d, todayISO())===1 ? 'Yesterday' : 'On '+fmtDay(p.d);
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee · morning check</div>'+
+      '<p>'+when+' you did <strong>'+esc(rungDef('knee',p.rung).n)+'</strong>. Do one slow half-squat. Compared with before that session, how’s the knee?</p>'+
+      '<div class="gate-btns"><button data-gate="ok">Back to normal</button><button data-gate="sore">Still a bit sore</button><button data-gate="worse">Worse</button></div>'+
+      '<p class="km-note">This is what moves the knee ladder. Sore the next morning means that session was a bit too much, so it steps back rather than waiting for it to flare.</p>';
+    c.querySelectorAll('[data-gate]').forEach(b=>b.addEventListener('click', ()=>resolveGate(b.dataset.gate)));
+  } else if(r && r.d===todayISO() && !r.hidden && !kneeMode){
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee · morning check</div><p>'+r.msg+'</p>'+
+      (r.km ? '<div style="display:flex;gap:8px;margin-top:10px"><button class="ghost-btn" id="gc-km">Turn on knee mode now</button><button class="link-btn" id="gc-hide">Not now</button></div>'
+            : '<button class="link-btn" id="gc-hide">Hide</button>');
+    const k=$('#gc-km'); if(k) k.addEventListener('click', startKneeMode);
+    $('#gc-hide').addEventListener('click', ()=>{ kneeGate.result.hidden=true; saveGate(); render(); });
+  } else c.hidden=true;
 }
 
 function buildSteps(sid){
@@ -1281,6 +1387,7 @@ function renderToday(){
   $('#week-strip').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click', ()=>peekDay(b.dataset.day)));
 
   $('#bench-due').hidden = !benchDue();
+  renderGateCard();
   renderKneeCard();
 
   // swaps
@@ -1299,7 +1406,7 @@ function renderKneeCard(){
   const c=$('#knee-card'); const ended=store.get('kneeEnded',null);
   if(kneeMode){
     const today=painLog.find(p=>p.d===todayISO()&&typeof p.knee==='number');
-    const v=today?today.knee:2, n=kneeDays(), rungName=LADDERS.knee.levels[Math.max(0,kneeMode.rung-1)].n;
+    const v=today?today.knee:2, n=kneeDays(), rungName=rungDef('knee', Math.max(0,kneeMode.rung-1)).n;
     c.hidden=false;
     c.innerHTML='<div class="eyebrow">Knee mode · day '+n+'</div>'+
       '<p>Squats and step-ups are swapped for <strong>tendon wall sits</strong> (5 × 45s, shallow) until the knee settles. Everything else is unchanged. Keep walking, and skip deep squats, lunges, jumping and kneeling for now.</p>'+
@@ -1316,7 +1423,7 @@ function renderKneeCard(){
   } else if(ended && ended.d===todayISO()){
     c.hidden=false;
     c.innerHTML='<div class="eyebrow">Knee mode finished</div><p>'+(ended.auto?'Three calm scores in a row. ':'')+
-      'You’re back on <strong>'+esc(LADDERS.knee.levels[lvl('knee')].n)+'</strong>, one rung lower than before, and the ladder will move you up as it feels easy. Use slow tempo (3s down) for the first week.</p>';
+      'You’re back on <strong>'+esc(curDef('knee').n)+'</strong>, one rung lower than before. It moves up again after settled next mornings.</p>';
   } else if(kneeSuggest()){
     const p=lastPain();
     c.hidden=false;
@@ -1352,12 +1459,25 @@ function renderPlanWeekOnly(){
 
 function ladderHTML(id){
   const L = LADDERS[id], cur = lvl(id);
-  let h = '<details><summary><span>'+esc(L.name)+'<span class="sub">'+esc(L.area)+' · now: '+esc(L.levels[cur].n)+'</span></span><span class="chev">›</span></summary>';
-  h += '<p style="font-size:.88rem;color:var(--ink2);margin:8px 0 0">'+esc(L.why)+'</p><div class="ladder">';
+  const dose = v => v.mode==='time' ? (v.sets+' × '+v.secs+'s'+(v.perSide?' / side':'')) : (v.sets+' × '+v.reps);
+  let h = '<details><summary><span>'+esc(L.name)+'<span class="sub">'+esc(L.area)+' · now: '+esc(curDef(id).n)+'</span></span><span class="chev">›</span></summary>';
+  h += '<p style="font-size:.88rem;color:var(--ink2);margin:8px 0 0">'+esc(L.why)+'</p>';
+  if(id==='knee' && !kneeMode){
+    const need=passesNeeded(cur);
+    h += '<p class="stage-note">Moves up after you rate it “Easy” and the next '+need+' mornings in a row are back to normal. So far: <strong>'+Math.min(kneeGate.passes,need)+' of '+need+'</strong>.</p>';
+  }
+  if(id==='toe' && lvl('knee') < KNEE_SPRING)
+    h += '<p class="stage-note">Pogo hops, skipping and strides are springy work for the knee tendon too, so they wait until the knee ladder reaches <strong>'+esc(LADDERS.knee.levels[KNEE_SPRING].n)+'</strong> (rung '+(KNEE_SPRING+1)+').</p>';
+  h += '<div class="ladder">';
+  let stage=0;
   L.levels.forEach((v,i)=>{
-    const dose = v.mode==='time' ? (v.sets+' × '+v.secs+'s') : (v.sets+' × '+v.reps);
-    h += '<div class="rung'+(i===cur?' cur':'')+'"><div class="n num">'+(i+1)+'</div><div class="info"><div class="rn">'+esc(v.n)+' <span style="color:var(--ink3);font-weight:500">· '+esc(dose)+'</span></div><div class="rd">'+esc(v.d)+'</div></div><button class="play" data-demo="'+esc(v.n)+'" aria-label="Show demo of '+esc(v.n)+'"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg></button></div>';
+    if(v.stage && v.stage!==stage){ stage=v.stage; h += '<div class="stage-h">Stage '+stage+' · '+esc(KNEE_STAGES[stage].t)+' <span>· '+esc(KNEE_STAGES[stage].d)+'</span></div>'; }
+    const r = rungDef(id, i), swapped = r!==v;
+    const kitName = v.needs ? KIT.find(k=>k.k===v.needs).n : '';
+    h += '<div class="rung'+(i===cur?' cur':'')+'"><div class="n num">'+(i+1)+'</div><div class="info"><div class="rn">'+esc(r.n)+' <span style="color:var(--ink3);font-weight:500">· '+esc(dose(r))+'</span></div><div class="rd">'+esc(r.d)+
+      (swapped ? '<br><em>With a '+esc(kitName.toLowerCase())+': '+esc(v.n)+'</em>' : '')+'</div></div><button class="play" data-demo="'+esc(r.n)+'" aria-label="Show demo of '+esc(r.n)+'"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg></button></div>';
   });
+  if(id==='knee') h += '<div class="stage-h">Stage 4 · Springy work <span>· pogo hops, skipping and strides, in the Big-toe ladder. They unlock at rung '+(KNEE_SPRING+1)+'.</span></div>';
   h += '</div><div class="lvl-ctl"><button data-lvl="'+id+'" data-dir="-1">− Easier</button><button data-lvl="'+id+'" data-dir="1">Harder +</button></div></details>';
   return h;
 }
@@ -1375,6 +1495,7 @@ function renderLibrary(){
     b.addEventListener('click', ()=>{
       const id=b.dataset.lvl, dir=+b.dataset.dir;
       levels[id] = Math.max(0, Math.min(LADDERS[id].levels.length-1, lvl(id)+dir));
+      if(id==='knee'){ kneeGate.passes=0; saveGate(); }
       store.set('levels', levels); renderLibrary();
     });
   });
@@ -1572,14 +1693,15 @@ function applyBackup(d){
   if(d.tests) tests=d.tests;
   if(d.blockStart) blockStart=d.blockStart;
   if('kneeMode' in d){ kneeMode=d.kneeMode; store.set('kneeMode', kneeMode); }
+  if(d.kneeGate){ kneeGate=d.kneeGate; saveGate(); }
   store.set('levels',levels); store.set('history',history); store.set('pain',painLog);
   store.set('kit',kit); store.set('tests',tests); if(blockStart) store.set('blockStart',blockStart);
-  // A v1 backup restores v1 rungs: remap them.
-  if((d.progv||1) < PROGRAM_VERSION){ store.set('progv', 1); migrate(); }
+  // An older backup restores older rungs: remap them from its own version.
+  if((d.progv||1) < PROGRAM_VERSION){ store.set('progv', d.progv||1); migrate(); }
   render(); alert('Restored.');
 }
 $('#btn-export').addEventListener('click', async ()=>{
-  const data = JSON.stringify({app:'sturdy', progv:PROGRAM_VERSION, exported:todayISO(), levels, history, pain:painLog, kit, tests, blockStart, kneeMode});
+  const data = JSON.stringify({app:'sturdy', progv:PROGRAM_VERSION, exported:todayISO(), levels, history, pain:painLog, kit, tests, blockStart, kneeMode, kneeGate});
   const fname = 'sturdy-backup-'+todayISO()+'.json';
   // Inside the claude.ai viewer, plain <a download> is inert — go through the
   // downloads capability there; use a normal download everywhere else.
@@ -1949,9 +2071,11 @@ function finishSession(early){
     h+='<p>How did the ladder work feel? "Easy" (top of the range, 2–3 reps spare, pain in the green) moves you up a rung for next time.</p>';
     usedSlots.forEach(id=>{
       const L=LADDERS[id], cur=lvl(id);
-      h+='<div class="fb-row" data-slot="'+id+'"><div class="fn">'+esc(L.levels[cur].n)+'<span>'+esc(L.name)+' · rung '+(cur+1)+' of '+L.levels.length+'</span></div>'+
+      h+='<div class="fb-row" data-slot="'+id+'"><div class="fn">'+esc(curDef(id).n)+'<span>'+esc(L.name)+' · rung '+(cur+1)+' of '+L.levels.length+'</span></div>'+
          '<div class="fb-btns"><button data-fb="down">Hard</button><button data-fb="keep" class="sel-keep">Right</button><button data-fb="up">Easy</button></div></div>';
     });
+    if(usedSlots.includes('knee'))
+      h+='<p class="km-note">The knee waits for tomorrow morning: Today will ask how it feels. "Easy" plus '+passesNeeded(lvl('knee'))+' settled mornings in a row moves it up. Still sore drops it a rung.</p>';
   } else {
     h+='<p>Nice work. Consistency is the whole game.</p>';
   }
@@ -1967,12 +2091,19 @@ function finishSession(early){
     });
   });
   $('#fb-close').addEventListener('click', ()=>{
+    let held='';
     document.querySelectorAll('.fb-row[data-slot]').forEach(row=>{
       const id=row.dataset.slot, c=row.dataset.choice;
-      if(c==='up') levels[id]=Math.min(LADDERS[id].levels.length-1, lvl(id)+1);
+      if(id==='knee'){ kneeSessionDone(c); return; }
+      if(c==='up'){
+        // springy toe rungs also load the knee tendon, so they wait for the knee ladder
+        if(id==='toe' && lvl('toe')+1>=TOE_SPRING && lvl('knee')<KNEE_SPRING){ held='Pogo hops wait until the knee ladder reaches '+LADDERS.knee.levels[KNEE_SPRING].n+'.'; return; }
+        levels[id]=Math.min(LADDERS[id].levels.length-1, lvl(id)+1);
+      }
       if(c==='down') levels[id]=Math.max(0, lvl(id)-1);
     });
     store.set('levels',levels); saveCheckin(); closeModal(); render();
+    if(held) toast(held);
   });
 }
 
@@ -1994,7 +2125,7 @@ function openDemo(def){
   $('#demo-close').addEventListener('click', ()=>closeModal());
 }
 function defByName(n){
-  for(const id in LADDERS){ const v=LADDERS[id].levels.find(x=>x.n===n); if(v) return v; }
+  for(const id in LADDERS) for(const v of LADDERS[id].levels){ if(v.n===n) return v; if(v.alt && v.alt.n===n) return v.alt; }
   for(const k in DRILLS){ if(DRILLS[k].n===n) return DRILLS[k]; }
   return null;
 }
@@ -2030,7 +2161,7 @@ if(!store.get('onboarded', false)){
   openModal(
     '<h2>Welcome to Sturdy</h2>'+
     '<p>Your week: <strong>three rehab days</strong> (Mon, Wed, Fri: knee, hip, calf and big toe), an upper-body day, yoga, conditioning and a rest day. About 30–40 minutes each.</p>'+
-    '<p><strong>Ladders:</strong> key exercises have progression rungs. After each workout you rate them, and "Easy" levels you up. Set your starting rungs in the Library if you like.</p>'+
+    '<p><strong>Ladders:</strong> key exercises have progression rungs. After each workout you rate them, and "Easy" levels you up. The knee also waits for a settled next morning. Set your starting rungs in the Library if you like.</p>'+
     '<p><strong>Pain rule:</strong> up to 3/10 that settles by morning is fine. More than that: drop a rung, don’t stop. Sharp pain: stop that move today.</p>'+
     '<p><strong>Install:</strong> in Chrome, tap ⋮ → <strong>Add to Home screen</strong> to make this a real app.</p>'+
     '<button class="big-btn" id="ob-go" style="margin-top:14px">Let’s go</button>'
@@ -2038,14 +2169,13 @@ if(!store.get('onboarded', false)){
   document.getElementById('ob-go').addEventListener('click', ()=>{ store.set('onboarded', true); closeModal(); });
 } else if(migrated){
   openModal(
-    '<h2>Your plan has changed</h2>'+
-    '<p>Rebuilt around your knee and toe update:</p><ul>'+
-    '<li><strong>Three rehab days</strong> (Mon, Wed, Fri), each with knee, side-of-hip and calf/toe work. The evidence uses 3 a week for 6–12 weeks.</li>'+
-    '<li><strong>Kneeling toe-tuck stretch removed.</strong> It loaded the exact position that hurts. A new <strong>Big-toe push-off</strong> ladder rebuilds that range gradually. You start on: '+esc(migrated.toe)+'.</li>'+
-    '<li><strong>Knee ladder reordered</strong> from least to most kneecap load. With the flare, you’re on: '+esc(migrated.knee)+'. Wall sits stay in on Mon and Fri.</li>'+
-    '<li><strong>New side-of-hip ladder</strong> for the inward knee drift.</li>'+
-    '<li><strong>My kit</strong> (Plan tab): tick equipment as you buy it and those exercises switch on.</li>'+
-    '<li><strong>Benchmarks</strong> every 2 weeks (Progress tab). Do the first one today as your baseline.</li>'+
+    '<h2>New knee plan</h2>'+
+    '<p>Rebuilt for the knee tendon, after the single-leg squats flared it:</p><ul>'+
+    '<li><strong>Four stages:</strong> steady holds, then slow two-leg reps, then heavier single-leg work, then springy work. You restart at stage 1 on <strong>'+esc(migrated.knee)+'</strong>.</li>'+
+    '<li><strong>Morning check.</strong> The morning after a knee session, Today asks how the knee feels. Back to normal counts toward moving up. Still sore drops you a rung.</li>'+
+    '<li><strong>Moving up</strong> takes “Easy” plus 2 settled mornings in a row (3 in stage 1), so one good-feeling session can’t jump you too far.</li>'+
+    '<li><strong>Pogo hops and skipping</strong> wait until the knee reaches the single-leg decline squat.'+(migrated.toeCapped?' Your toe ladder is on '+esc(migrated.toe)+' until then.':'')+'</li>'+
+    '<li><strong>My kit</strong> has two new helpers: a heavy band for Spanish squats and a slant board. Both have kit-free stand-ins until you buy them.</li>'+
     '</ul><button class="big-btn" id="wn-go" style="margin-top:10px">Got it</button>'
   );
   document.getElementById('wn-go').addEventListener('click', closeModal);
