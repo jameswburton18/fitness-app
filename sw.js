@@ -1,4 +1,5 @@
 const CACHE = 'sturdy-v7';
+// Stepwise (mum/) shares this origin, so only clear our own caches.
 const ASSETS = ['./', './index.html', './figure.js', './moves.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {
@@ -8,7 +9,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('sturdy-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

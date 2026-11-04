@@ -1,0 +1,2062 @@
+<meta charset="utf-8">
+<title>Stepwise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141b17">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+/* ============ tokens — dark-first (this is a night-and-day workout screen) ============ */
+:root{
+  --bg:#141b17;            /* deep pine ground */
+  --bg2:#1b241f;           /* raised surface */
+  --bg3:#232e28;           /* higher surface / chips */
+  --line:#2c3a32;
+  --ink:#ece7d9;           /* warm bone */
+  --ink2:#9db0a3;          /* muted green-grey */
+  --ink3:#6d7f73;
+  --accent:#e2a355;        /* amber — action, timer */
+  --accent-ink:#191006;
+  --good:#8cbf7a;
+  --alert:#d9704a;
+  --rest:#7ea8c4;          /* cool slate for rest steps */
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --r:14px;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f1f3ee; --bg2:#ffffff; --bg3:#e6eae3; --line:#d6ddd4;
+    --ink:#1e2822; --ink2:#5c6d61; --ink3:#8b998e;
+    --accent:#b0762a; --accent-ink:#fff8ee;
+    --good:#4d7f3c; --alert:#b34a28; --rest:#3f6f8e;
+    --shadow:0 10px 30px rgba(30,40,34,.12);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f1f3ee; --bg2:#ffffff; --bg3:#e6eae3; --line:#d6ddd4;
+  --ink:#1e2822; --ink2:#5c6d61; --ink3:#8b998e;
+  --accent:#b0762a; --accent-ink:#fff8ee;
+  --good:#4d7f3c; --alert:#b34a28; --rest:#3f6f8e;
+  --shadow:0 10px 30px rgba(30,40,34,.12);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Instrument Sans",system-ui,-apple-system,sans-serif;
+  line-height:1.5; min-height:100dvh;
+}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif; text-wrap:balance; margin:0}
+button{font:inherit; color:inherit; background:none; border:none; cursor:pointer; padding:0}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ============ app shell ============ */
+#app{max-width:520px; margin:0 auto; padding:18px 18px calc(84px + env(safe-area-inset-bottom))}
+.screen{display:none}
+.screen.on{display:block; animation:fade .18s ease}
+@keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1}}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+
+.brand{display:flex; align-items:baseline; justify-content:space-between; margin:4px 0 18px}
+.brand h1{font-size:1.5rem; font-weight:800; letter-spacing:-.02em}
+.brand h1 span{color:var(--accent)}
+.brand .date{color:var(--ink2); font-size:.85rem}
+
+.eyebrow{font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3)}
+.card{background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:16px; margin-bottom:14px}
+.card h2{font-size:1.15rem; font-weight:700; margin:2px 0 6px}
+.card h3{font-size:.98rem; font-weight:700; margin:14px 0 4px}
+.card p{margin:.4em 0; color:var(--ink2); font-size:.92rem}
+.card p strong{color:var(--ink)}
+.knee-card{border-color:color-mix(in srgb, var(--rest) 55%, var(--line))}
+.knee-card .eyebrow{color:var(--rest)}
+.gate-btns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:10px}
+.gate-btns button{font:inherit; font-size:.85rem; font-weight:600; padding:12px 6px; border-radius:12px; border:1px solid var(--line); background:var(--bg3); color:var(--ink); cursor:pointer; line-height:1.2}
+.gate-btns button:active{transform:scale(.97)}
+.gate-btns button[data-gate="ok"]{border-color:color-mix(in srgb, var(--good) 60%, var(--line))}
+.gate-btns button[data-gate="worse"]{border-color:color-mix(in srgb, var(--alert) 50%, var(--line))}
+.stage-h{font-size:.78rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--rest); margin:12px 0 2px}
+.stage-h span{font-weight:500; text-transform:none; letter-spacing:0; color:var(--ink3)}
+.stage-note{font-size:.82rem; color:var(--ink2); margin:10px 0 0}
+.km-note{font-size:.84rem !important}
+.km-lib{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+.link-btn{background:none; border:none; padding:8px 4px; color:var(--ink3); font-size:.85rem; text-decoration:underline; text-underline-offset:3px}
+.tag{display:inline-block; background:var(--bg3); border-radius:999px; padding:2px 10px; font-size:.75rem; font-weight:600; color:var(--ink2); margin-right:6px}
+.tag.hot{background:var(--accent); color:var(--accent-ink)}
+
+.big-btn{
+  display:block; width:100%; text-align:center; background:var(--accent); color:var(--accent-ink);
+  font-weight:700; font-size:1.05rem; padding:15px; border-radius:var(--r); box-shadow:var(--shadow);
+}
+.big-btn:active{transform:scale(.985)}
+.ghost-btn{
+  display:block; width:100%; text-align:center; border:1px solid var(--line); color:var(--ink2);
+  font-weight:600; font-size:.92rem; padding:11px; border-radius:var(--r); background:var(--bg2);
+}
+.row-btns{display:flex; gap:10px}
+.row-btns>*{flex:1}
+
+/* ============ tab bar ============ */
+nav{
+  position:fixed; bottom:0; left:0; right:0; z-index:40;
+  background:var(--bg2); border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav .inner{max-width:520px; margin:0 auto; display:flex}
+nav button{
+  flex:1; padding:10px 0 12px; color:var(--ink3); font-size:.7rem; font-weight:600;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+nav button svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+nav button.on{color:var(--accent)}
+
+/* ============ today ============ */
+.today-hero{
+  background:linear-gradient(165deg, color-mix(in srgb, var(--accent) 11%, var(--bg2)) 0%, var(--bg2) 55%);
+  border:1px solid var(--line); border-radius:18px; padding:20px 18px 16px; margin-bottom:14px; box-shadow:var(--shadow);
+}
+.today-hero .eyebrow{color:var(--accent)}
+.today-hero h2{font-size:1.7rem; font-weight:800; letter-spacing:-.02em; margin:6px 0 4px}
+.today-hero .meta{color:var(--ink2); font-size:.9rem; margin-bottom:14px}
+.dots{display:flex; gap:6px; margin-top:6px}
+.dot{width:12px; height:12px; border-radius:50%; background:var(--bg3); border:1px solid var(--line)}
+.dot.done{background:var(--good); border-color:var(--good)}
+.dot.today-dot{outline:2px solid var(--accent); outline-offset:1px}
+.stat-row{display:flex; gap:10px; margin-bottom:14px}
+.stat{flex:1; background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:12px 14px}
+.stat .v{font-family:"Bricolage Grotesque",sans-serif; font-size:1.5rem; font-weight:800; line-height:1.1}
+.stat .l{font-size:.72rem; color:var(--ink3); font-weight:600; letter-spacing:.06em; text-transform:uppercase}
+.swap-list{display:flex; flex-direction:column; gap:8px; margin-top:10px}
+.swap-list button{
+  text-align:left; background:var(--bg2); border:1px solid var(--line); border-radius:12px; padding:11px 14px;
+  display:flex; justify-content:space-between; align-items:center; font-size:.92rem; font-weight:600;
+}
+.swap-list button span{color:var(--ink3); font-weight:500; font-size:.8rem}
+
+/* ============ plan / library ============ */
+.week-row{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line)}
+.week-row:last-child{border-bottom:none}
+.week-row .d{width:38px; font-weight:700; font-size:.8rem; color:var(--ink3); text-transform:uppercase; letter-spacing:.06em}
+.week-row .t{flex:1; font-weight:600; font-size:.95rem}
+.week-row .m{color:var(--ink3); font-size:.8rem}
+details{border-top:1px solid var(--line); padding:10px 0}
+details:first-of-type{border-top:none}
+summary{cursor:pointer; font-weight:700; font-size:.95rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:8px}
+summary::-webkit-details-marker{display:none}
+summary .chev{color:var(--ink3); transition:transform .15s}
+details[open] summary .chev{transform:rotate(90deg)}
+summary .sub{display:block; font-weight:500; font-size:.8rem; color:var(--ink3)}
+.ladder{margin:10px 0 4px; display:flex; flex-direction:column; gap:6px}
+.rung{display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:10px; background:var(--bg3); font-size:.88rem}
+.rung .n{width:20px; height:20px; border-radius:50%; background:var(--bg); color:var(--ink3); font-size:.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none}
+.rung.cur{outline:2px solid var(--accent)}
+.rung.cur .n{background:var(--accent); color:var(--accent-ink)}
+.rung .info{flex:1}
+.rung .info .rn{font-weight:600}
+.rung .info .rd{color:var(--ink2); font-size:.8rem}
+.lvl-ctl{display:flex; gap:8px; margin-top:8px}
+.lvl-ctl button{flex:1; border:1px solid var(--line); border-radius:10px; padding:8px; font-size:.82rem; font-weight:600; color:var(--ink2); background:var(--bg2)}
+.cue-list{margin:6px 0 0; padding-left:18px; color:var(--ink2); font-size:.88rem}
+.cue-list li{margin:3px 0}
+
+/* pain traffic light */
+.light{display:flex; gap:10px; align-items:flex-start; margin:10px 0}
+.light .bulb{width:14px; height:14px; border-radius:50%; flex:none; margin-top:4px}
+.light p{margin:0; font-size:.9rem; color:var(--ink2)}
+.light p strong{color:var(--ink)}
+
+/* ============ body trends ============ */
+.trend-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+.trend{background:var(--bg3); border-radius:12px; padding:10px 12px}
+.trend .tl{font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3)}
+.trend .tv{font-family:"Bricolage Grotesque",sans-serif; font-size:1.4rem; font-weight:800; line-height:1.2}
+.trend .tv small{font-size:.7rem; font-weight:600; color:var(--ink3)}
+.trend svg{display:block; width:100%; height:44px; margin-top:4px}
+.trend .delta{font-size:.72rem; font-weight:600}
+.trend .delta.down{color:var(--good)} .trend .delta.up{color:var(--alert)} .trend .delta.flat{color:var(--ink3)}
+.ck-row{padding:12px 0; border-bottom:1px solid var(--line)}
+.ck-row:last-of-type{border-bottom:none}
+.ck-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px}
+.ck-head .cn{font-weight:600; font-size:.92rem}
+.ck-head .cv{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.1rem}
+.ck-row input[type=range]{width:100%; accent-color:var(--accent); height:28px}
+.ck-scale{display:flex; justify-content:space-between; font-size:.68rem; color:var(--ink3)}
+
+/* ============ progress ============ */
+.hist{display:flex; flex-direction:column}
+.hist-row{display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid var(--line); font-size:.92rem}
+.hist-row:last-child{border-bottom:none}
+.hist-row .hd{color:var(--ink3); font-size:.8rem; width:86px; flex:none}
+.hist-row .ht{flex:1; font-weight:600}
+.hist-row .hm{color:var(--ink2); font-size:.85rem}
+.bars{display:flex; align-items:flex-end; gap:5px; height:64px; margin-top:10px}
+.bars .b{flex:1; background:var(--bg3); border-radius:4px 4px 0 0; min-height:3px; position:relative}
+.bars .b.f{background:var(--accent)}
+.bars-l{display:flex; gap:5px; margin-top:4px}
+.bars-l span{flex:1; text-align:center; font-size:.62rem; color:var(--ink3)}
+
+/* ============ player ============ */
+#player{
+  position:fixed; inset:0; z-index:60; background:var(--bg); display:none;
+  flex-direction:column; padding:calc(8px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));
+  max-width:520px; margin:0 auto; overflow:hidden;
+}
+#player.on{display:flex; animation:playerin .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes playerin{from{opacity:0; transform:translateY(24px) scale(.985)} to{opacity:1; transform:none}}
+.p-top{display:flex; align-items:center; gap:8px; height:44px; flex:none}
+.p-icon{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:var(--ink2); flex:none; transition:background .15s, transform .15s}
+.p-icon:active{background:var(--bg3); transform:scale(.9)}
+.p-icon svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.p-title{flex:1; min-width:0; text-align:center}
+.p-title .sess{font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.p-title .p-elapsed{font-size:.74rem; color:var(--ink3); font-weight:600}
+.p-segs{display:flex; gap:3px; height:5px; margin:4px 2px 10px; flex:none}
+.p-segs i{flex:1; background:var(--bg3); border-radius:3px; overflow:hidden; position:relative}
+.p-segs i b{position:absolute; inset:0; width:0; background:var(--accent); border-radius:3px; transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.p-segs i.done b{background:color-mix(in srgb, var(--accent) 70%, var(--good))}
+.p-sec{display:flex; justify-content:space-between; align-items:baseline; font-size:.74rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 2px 8px; flex:none; transition:color .3s}
+.p-sec .num{color:var(--ink3); letter-spacing:.04em; font-weight:700}
+#player.is-rest .p-sec{color:var(--rest)}
+#player.is-ready .p-sec{color:var(--ink2)}
+
+.p-swap{flex:1; display:flex; flex-direction:column; min-height:0}
+.p-swap.in-f{animation:swapf .34s cubic-bezier(.2,.8,.2,1)}
+.p-swap.in-b{animation:swapb .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes swapf{from{opacity:0; transform:translateX(28px)} to{opacity:1; transform:none}}
+@keyframes swapb{from{opacity:0; transform:translateX(-28px)} to{opacity:1; transform:none}}
+
+.p-stage{
+  --stage:var(--bg2);
+  position:relative; flex:1 1 auto; min-height:170px; border-radius:22px;
+  background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 7%, var(--bg2)) 0%, var(--bg2) 60%);
+  border:1px solid var(--line); overflow:hidden; transition:border-color .3s;
+}
+#player.is-rest .p-stage{background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--rest) 10%, var(--bg2)) 0%, var(--bg2) 60%)}
+.p-fig{position:absolute; inset:14px 12px 6px; transition:opacity .25s}
+#player.is-rest .p-fig{opacity:.9}
+.p-tagline{position:absolute; left:12px; top:10px; display:flex; gap:6px; z-index:2}
+.p-chip{font-size:.68rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:4px 9px; border-radius:999px; background:color-mix(in srgb, var(--bg) 70%, transparent); color:var(--ink2); border:1px solid var(--line)}
+.p-chip.side{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.p-chip.next{background:var(--rest); color:var(--bg); border-color:var(--rest)}
+.p-chip:empty{display:none}
+.p-tempo{position:absolute; right:12px; top:10px; font-size:.7rem; font-weight:700; color:var(--ink3); z-index:2}
+.p-paused{position:absolute; inset:0; display:grid; place-items:center; background:color-mix(in srgb, var(--bg) 62%, transparent); backdrop-filter:blur(2px);
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.6rem; letter-spacing:.02em; opacity:0; pointer-events:none; transition:opacity .2s; z-index:3}
+#player.is-paused .p-paused{opacity:1}
+
+.p-info{display:flex; gap:14px; align-items:center; margin:14px 2px 0; flex:none}
+.p-words{flex:1; min-width:0}
+.p-name{font-family:"Bricolage Grotesque",sans-serif; font-size:1.62rem; font-weight:800; letter-spacing:-.02em; line-height:1.1; text-wrap:balance}
+#player.is-rest .p-name{font-size:1.35rem}
+.p-meta{display:flex; align-items:center; gap:10px; margin-top:7px; color:var(--ink2); font-size:.92rem; font-weight:600; flex-wrap:wrap}
+.p-dots{display:flex; gap:5px}
+.p-dots i{width:9px; height:9px; border-radius:50%; background:var(--bg3); border:1.5px solid var(--line); transition:background .3s, border-color .3s, transform .3s}
+.p-dots i.done{background:var(--good); border-color:var(--good)}
+.p-dots i.cur{background:var(--accent); border-color:var(--accent); transform:scale(1.25)}
+#player.is-rest .p-dots i.cur{background:var(--rest); border-color:var(--rest)}
+
+.p-clock{width:118px; height:118px; flex:none; position:relative}
+.p-clock svg{width:100%; height:100%; transform:rotate(-90deg); display:block}
+.p-clock .track{fill:none; stroke:var(--bg3); stroke-width:9}
+.p-clock .arc{fill:none; stroke:var(--accent); stroke-width:9; stroke-linecap:round}
+#player.is-rest .p-clock .arc{stroke:var(--rest)}
+#player.is-ready .p-clock .arc{stroke:var(--ink3)}
+.p-num{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-variant-numeric:tabular-nums; line-height:1}
+.p-num .v{font-size:2.9rem; letter-spacing:-.03em}
+.p-num .u{font-family:"Instrument Sans",sans-serif; font-size:.7rem; font-weight:700; color:var(--ink3); letter-spacing:.08em; text-transform:uppercase; margin-top:4px}
+.p-clock.tick .v{animation:tick .35s ease}
+@keyframes tick{0%{transform:scale(1.14)} 100%{transform:scale(1)}}
+.p-clock.final .v{color:var(--accent)}
+.p-clock.final svg{animation:pulse 1s ease infinite}
+@keyframes pulse{0%,100%{transform:rotate(-90deg) scale(1)} 50%{transform:rotate(-90deg) scale(1.04)}}
+.p-clock.reps{border-radius:26px; background:var(--bg2); border:1px solid var(--line)}
+.p-clock.reps .v{font-size:2.5rem}
+.p-plus{position:absolute; left:50%; bottom:-12px; transform:translateX(-50%); font-size:.72rem; font-weight:800; color:var(--rest); background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:3px 9px; white-space:nowrap}
+.p-plus:active{transform:translateX(-50%) scale(.92)}
+
+.p-cue{display:block; width:100%; text-align:left; margin:14px 2px 0; padding:10px 12px; border-radius:14px; background:var(--bg2); border:1px solid var(--line); color:var(--ink2); font-size:.9rem; line-height:1.4; min-height:3.9em; position:relative; flex:none}
+.p-cue .ct{display:block; padding-right:34px}
+.p-cue .ct.fade{animation:cuefade .35s ease}
+@keyframes cuefade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+.p-cue .cn{position:absolute; right:10px; top:10px; display:flex; gap:3px}
+.p-cue .cn i{width:5px; height:5px; border-radius:50%; background:var(--line)}
+.p-cue .cn i.on{background:var(--ink2)}
+.p-under{display:flex; justify-content:space-between; align-items:center; gap:10px; margin:10px 4px 0; font-size:.84rem; color:var(--ink3); flex:none; min-height:1.3em}
+.p-under strong{color:var(--ink2); font-weight:600}
+.p-under .nx{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.p-video{font-size:.8rem; font-weight:700; color:var(--rest); text-decoration:none; white-space:nowrap}
+.p-video:empty{display:none}
+
+.p-ctl{display:flex; align-items:center; gap:12px; margin-top:12px; flex:none}
+.p-round{width:58px; height:58px; border-radius:50%; flex:none; display:grid; place-items:center; background:var(--bg2); border:1px solid var(--line); color:var(--ink2); transition:transform .18s cubic-bezier(.3,1.6,.5,1), background .15s}
+.p-round svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round}
+.p-round:active{transform:scale(.88); background:var(--bg3)}
+.p-round[disabled]{opacity:.35}
+.p-go{flex:1; height:64px; border-radius:32px; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:1.12rem; letter-spacing:.01em;
+  background:var(--accent); color:var(--accent-ink); box-shadow:0 8px 24px color-mix(in srgb, var(--accent) 30%, transparent);
+  transition:transform .2s cubic-bezier(.3,1.6,.5,1), background .25s, color .25s, box-shadow .25s; position:relative; overflow:hidden}
+.p-go svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+.p-go:active{transform:scale(.95)}
+.p-go.soft{background:var(--bg2); color:var(--ink); box-shadow:none; border:1px solid var(--line)}
+.p-go.rest{background:var(--rest); color:var(--bg); box-shadow:0 8px 24px color-mix(in srgb, var(--rest) 28%, transparent)}
+.p-go .rip{position:absolute; border-radius:50%; background:currentColor; opacity:.25; transform:scale(0); animation:rip .5s ease-out forwards; pointer-events:none}
+@keyframes rip{to{transform:scale(1); opacity:0}}
+.p-go.pop{animation:gopop .38s cubic-bezier(.3,1.6,.5,1)}
+@keyframes gopop{0%{transform:scale(.92)} 60%{transform:scale(1.03)} 100%{transform:scale(1)}}
+@media (max-height:700px){
+  .p-stage{min-height:140px}
+  .p-clock{width:100px; height:100px} .p-num .v{font-size:2.4rem}
+  .p-name{font-size:1.4rem}
+  .p-cue{min-height:0}
+}
+
+/* exercise demo sheet */
+.demo-stage{--stage:var(--bg3); height:220px; border-radius:18px; background:var(--bg3); position:relative; margin:12px 0 4px; overflow:hidden}
+.demo-stage .p-fig{inset:12px 10px 6px}
+.demo-btn{display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; color:var(--accent); padding:4px 0}
+.demo-btn svg{width:16px; height:16px; fill:currentColor}
+.rung .play{width:34px; height:34px; border-radius:50%; flex:none; display:grid; place-items:center; background:var(--bg2); color:var(--accent); border:1px solid var(--line)}
+.rung .play svg{width:14px; height:14px; fill:currentColor; margin-left:2px}
+.pv-item button{all:unset; cursor:pointer}
+.pv-item .pvn{display:inline-flex; align-items:center; gap:6px}
+.pv-item .pvn::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--line); flex:none}
+
+/* finish */
+.fin-hero{text-align:center; padding:6px 0 4px}
+.fin-check{width:84px; height:84px; margin:4px auto 8px}
+.fin-check circle{fill:none; stroke:var(--good); stroke-width:5; stroke-dasharray:252; stroke-dashoffset:252; animation:draw .7s .1s cubic-bezier(.6,.1,.3,1) forwards}
+.fin-check path{fill:none; stroke:var(--good); stroke-width:6; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:60; stroke-dashoffset:60; animation:draw .45s .6s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fin-stats{display:flex; gap:10px; margin:12px 0 6px}
+.fin-stats div{flex:1; background:var(--bg3); border-radius:14px; padding:10px 8px; text-align:center; animation:rise .4s both}
+.fin-stats div:nth-child(2){animation-delay:.08s} .fin-stats div:nth-child(3){animation-delay:.16s}
+@keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+.fin-stats b{display:block; font-family:"Bricolage Grotesque",sans-serif; font-size:1.5rem; font-weight:800; line-height:1.1}
+.fin-stats span{font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3)}
+.burst{position:fixed; left:50%; top:30%; width:0; height:0; z-index:90; pointer-events:none}
+.burst i{position:absolute; width:8px; height:8px; border-radius:2px; animation:burst 1s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes burst{from{transform:translate(0,0) rotate(0); opacity:1} to{transform:translate(var(--x),var(--y)) rotate(var(--r)); opacity:0}}
+.end-opts{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+
+/* summary + modal */
+#modal-wrap{position:fixed; inset:0; z-index:80; background:rgba(0,0,0,.55); display:none; align-items:flex-end; justify-content:center}
+#modal-wrap.on{display:flex; animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0}}
+#modal-wrap.closing{animation:fadeout .2s ease forwards}
+#modal-wrap.closing #modal{animation:modalout .2s ease forwards}
+@keyframes fadeout{to{opacity:0}}
+@keyframes modalout{to{transform:translateY(40px); opacity:0}}
+#modal{background:var(--bg2); border:1px solid var(--line); border-radius:22px 22px 0 0; padding:10px 18px calc(20px + env(safe-area-inset-bottom)); width:100%; max-width:520px; max-height:88dvh; overflow-y:auto}
+#modal::before{content:''; display:block; width:40px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 12px}
+#modal h2{font-size:1.3rem; font-weight:800; margin-bottom:6px}
+#modal p{color:var(--ink2); font-size:.92rem}
+.fb-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line)}
+.fb-row:last-of-type{border-bottom:none}
+.fb-row .fn{font-weight:600; font-size:.9rem; flex:1}
+.fb-row .fn span{display:block; font-weight:500; font-size:.78rem; color:var(--ink3)}
+.fb-btns{display:flex; gap:0; background:var(--bg3); border-radius:12px; padding:3px; border:1px solid var(--line)}
+.fb-btns button{border-radius:9px; padding:7px 11px; font-size:.8rem; font-weight:700; color:var(--ink2); transition:background .2s, color .2s, transform .15s}
+.fb-btns button:active{transform:scale(.92)}
+.fb-btns button.sel-up{background:var(--good); color:var(--bg)}
+.fb-btns button.sel-keep{background:var(--ink2); color:var(--bg)}
+.fb-btns button.sel-down{background:var(--alert); color:var(--bg)}
+
+
+/* ============ figure (exercise demos) ============ */
+:root{--fig:#ece7d9; --fig-far:#9aa69b; --prop:#2f3d35; --prop2:#27332c; --prop-top:#3c4d43}
+:root[data-theme="light"]{--fig:#24302a; --fig-far:#7b8a80; --prop:#cfd8cf; --prop2:#c3cdc4; --prop-top:#dde4dc}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){--fig:#24302a; --fig-far:#7b8a80; --prop:#cfd8cf; --prop2:#c3cdc4; --prop-top:#dde4dc} }
+.fig-svg{width:100%; height:100%; display:block; overflow:hidden}
+.fig .ff{fill:var(--fig)} .fig .far .ff{fill:var(--fig-far)}
+.fig .fh{fill:var(--stage, var(--bg2))}
+.fig .fhl{fill:var(--accent)}
+.fig-ground{stroke:var(--line); stroke-width:1.4}
+.fig-shadow{fill:rgba(0,0,0,.2)}
+.fp-top{fill:var(--prop-top); stroke:var(--stage, var(--bg2)); stroke-width:.8}
+.fp-side{fill:var(--prop); stroke:var(--stage, var(--bg2)); stroke-width:.8}
+.fp-side2{fill:var(--prop2); stroke:var(--stage, var(--bg2)); stroke-width:.8}
+.fp-line{stroke:var(--prop-top)}
+.fk-wall.fp-side,.fk-wall.fp-side2,.fk-wall.fp-top{fill:var(--prop2)}
+.fk-soft.fp-top{fill:color-mix(in srgb, var(--rest) 35%, var(--prop-top))} .fk-soft.fp-side{fill:color-mix(in srgb, var(--rest) 25%, var(--prop))} .fk-soft.fp-side2{fill:color-mix(in srgb, var(--rest) 20%, var(--prop2))}
+.fk-towel.fp-top{fill:var(--rest)}
+.fa-kb{fill:#5b6b62; stroke:var(--stage, var(--bg2)); stroke-width:1.5} .fa-kbh{fill:none; stroke:#5b6b62; stroke-width:2.6; stroke-linecap:round}
+.fa-cuff{fill:var(--rest); stroke:var(--stage, var(--bg2)); stroke-width:1}
+.fa-band{fill:var(--rest); opacity:.95}
+.fa-stick{fill:#b58a57; stroke:var(--stage, var(--bg2)); stroke-width:1}
+.fa-towel{fill:var(--rest)}
+
+/* ============ feel: presses, nav, toast ============ */
+.big-btn,.ghost-btn,.swap-list button,.lvl-ctl button,nav button,.stepper button,.metro{transition:transform .18s cubic-bezier(.3,1.6,.5,1), background .15s, color .15s}
+.big-btn:active{transform:scale(.96)}
+.ghost-btn:active,.swap-list button:active,.lvl-ctl button:active,.stepper button:active{transform:scale(.97); background:var(--bg3)}
+nav button:active svg{transform:scale(.86)}
+nav button svg{transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+nav .inner{position:relative}
+nav .ind{position:absolute; top:0; left:0; height:3px; width:25%; display:flex; justify-content:center; transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+nav .ind::before{content:''; width:28px; height:3px; border-radius:0 0 3px 3px; background:var(--accent)}
+nav button.on svg{transform:translateY(-1px)}
+#toast{position:fixed; left:50%; bottom:calc(110px + env(safe-area-inset-bottom)); transform:translate(-50%,10px); background:var(--ink); color:var(--bg); font-weight:700; font-size:.85rem;
+  padding:8px 16px; border-radius:999px; opacity:0; pointer-events:none; z-index:100; transition:opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1)}
+#toast.on{opacity:1; transform:translate(-50%,0)}
+.today-hero #start-btn{position:relative; overflow:hidden}
+.today-hero #start-btn::after{content:''; position:absolute; inset:0; background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); transform:translateX(-100%); animation:shine 3.2s 1s ease-in-out infinite}
+@keyframes shine{0%{transform:translateX(-100%)} 40%,100%{transform:translateX(100%)}}
+.hero-fig{--stage:var(--bg2); height:132px; margin:-4px -4px 12px; position:relative}
+.hero-fig .p-fig{position:absolute; inset:0}
+.hero-fig .fig-ground{stroke:transparent}
+@media (prefers-reduced-motion:reduce){ .burst{display:none} }
+
+/* ============ v2 additions ============ */
+.block-line{display:flex; align-items:center; gap:10px; margin:-8px 0 16px; font-size:.78rem; font-weight:600; color:var(--ink2)}
+.block-line .bar{flex:1; height:4px; background:var(--bg3); border-radius:2px; overflow:hidden}
+.block-line .bar i{display:block; height:100%; background:var(--good); border-radius:2px}
+.block-line .rt{color:var(--accent)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px}
+.chip{font-size:.74rem; font-weight:600; padding:3px 10px; border-radius:999px; background:color-mix(in srgb, var(--bg3) 80%, transparent); color:var(--ink2); border:1px solid var(--line)}
+.today-hero .meta{margin-bottom:10px}
+details.preview{border-top:1px solid var(--line); margin-top:14px; padding:10px 0 0}
+details.preview summary{font-size:.85rem; color:var(--ink2); font-weight:600}
+.pv-group{margin-top:10px}
+.pv-group .ph{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); margin-bottom:4px}
+.pv-item{display:flex; justify-content:space-between; gap:10px; font-size:.86rem; padding:3px 0}
+.pv-item span:last-child{color:var(--ink3); white-space:nowrap}
+.pv-item.lad span:first-child::after{content:'rung'; margin-left:6px; font-size:.62rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); vertical-align:1px}
+
+.week-strip{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-top:12px}
+.ws{display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0}
+.ws .c{width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:var(--bg3); border:1.5px solid transparent; font-size:.78rem; font-weight:700; color:var(--ink2)}
+.ws.key .c{border-color:color-mix(in srgb, var(--accent) 60%, transparent)}
+.ws.done .c{background:var(--good); border-color:var(--good); color:var(--bg)}
+.ws.today .c{outline:2px solid var(--accent); outline-offset:2px}
+.ws .sl{font-size:.66rem; font-weight:600; color:var(--ink3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%}
+.ws.today .sl{color:var(--accent)}
+.legend{display:flex; gap:14px; margin-top:12px; font-size:.72rem; color:var(--ink3)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; background:var(--bg3)}
+.legend i.k{border:1.5px solid var(--accent)}
+.legend i.d{background:var(--good)}
+.legend .lg-hint{margin-left:auto}
+
+/* look ahead: preview any day's session in the hero */
+button.ws{padding:4px 0 2px; border-radius:12px}
+.ws.sel .c{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.ws.sel .sl{color:var(--accent)}
+.today-hero.peek{background:linear-gradient(165deg, color-mix(in srgb, var(--rest) 12%, var(--bg2)) 0%, var(--bg2) 55%)}
+.today-hero.peek .eyebrow{color:var(--rest)}
+.peek-acts{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.peek-acts .ghost-btn{width:auto; flex:1}
+.peek-acts .link-btn{flex:none}
+.next-link{display:flex; width:100%; align-items:center; gap:10px; margin-top:10px; padding:10px 0 0; border-top:1px solid var(--line); text-align:left; font-size:.85rem}
+.next-link[hidden]{display:none}
+.next-link .nk{font-weight:600; color:var(--ink2)}
+.next-link .nt{flex:1; min-width:0; color:var(--ink3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.next-link .chev{color:var(--ink3)}
+.pv-note{margin:10px 0 0; font-size:.78rem; color:var(--ink3)}
+.week-day{padding:0; border-top:none; border-bottom:1px solid var(--line)}
+.week-day:last-child{border-bottom:none}
+.week-day > .week-row{border-bottom:none; font-weight:inherit; font-size:inherit; justify-content:flex-start}
+.week-day.is-today .week-row .d{color:var(--accent)}
+.week-row .chev{color:var(--ink3); width:10px; text-align:center}
+.week-day .day-body{padding:0 0 12px 50px}
+.week-day .day-body .pv-group:first-child{margin-top:0}
+.due-card{border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
+.due-card .eyebrow{color:var(--accent)}
+.card ul.plain{margin:6px 0 0; padding-left:18px; color:var(--ink2); font-size:.92rem}
+.card ul.plain li{margin:4px 0}
+.card ol.gates{margin:8px 0 0; padding-left:20px; color:var(--ink2); font-size:.9rem}
+.card ol.gates li{margin:6px 0}
+.card ol.gates strong{color:var(--ink)}
+.week-row .tag{margin:0 0 0 6px; font-size:.64rem; padding:1px 8px; vertical-align:1px}
+
+/* kit switches */
+.kit-row{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer}
+.kit-row:last-child{border-bottom:none; padding-bottom:2px}
+.kit-row input{appearance:none; -webkit-appearance:none; flex:none; width:44px; height:26px; margin:2px 0 0; border-radius:999px; background:var(--bg3); border:1px solid var(--line); position:relative; cursor:pointer; transition:background .15s}
+.kit-row input::after{content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:var(--ink3); transition:transform .15s, background .15s}
+.kit-row input:checked{background:var(--good); border-color:var(--good)}
+.kit-row input:checked::after{transform:translateX(18px); background:var(--bg2)}
+.kit-row .kn{font-weight:700; font-size:.94rem}
+.kit-row .kp{color:var(--ink3); font-weight:600; font-size:.8rem; margin-left:4px}
+.kit-row .kw{font-size:.84rem; color:var(--ink2); margin-top:2px}
+.kit-row .ku{font-size:.78rem; color:var(--ink3); margin-top:2px}
+
+/* benchmarks */
+.bench-row{display:grid; grid-template-columns:1fr auto; gap:0 10px; align-items:baseline; padding:10px 0 6px; border-bottom:1px solid var(--line)}
+.bench-row:last-of-type{border-bottom:none}
+.bench-row .bl{font-weight:600; font-size:.9rem}
+.bench-row .bv{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.15rem; text-align:right}
+.bench-row .bv small{font-size:.7rem; color:var(--ink3); font-weight:600}
+.bench-row .bd{grid-column:1/-1; font-size:.74rem; font-weight:600; color:var(--ink3)}
+.bench-row .bd.better{color:var(--good)} .bench-row .bd.worse{color:var(--alert)}
+.bench-row svg{grid-column:1/-1; display:block; width:100%; height:auto; margin-top:4px}
+.test-block{padding:14px 0; border-bottom:1px solid var(--line)}
+.test-block:last-of-type{border-bottom:none}
+.test-block h3{font-size:.98rem; font-weight:700; margin:0 0 4px}
+.test-block p{margin:0 0 8px !important; font-size:.86rem !important}
+.test-pair{display:flex; gap:14px; flex-wrap:wrap}
+.test-pair>div{flex:1; min-width:130px}
+.test-pair label{display:block; font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); margin-bottom:4px}
+.stepper{display:flex; align-items:center; gap:6px}
+.stepper button{width:40px; height:40px; flex:none; border-radius:10px; border:1px solid var(--line); background:var(--bg3); font-size:1.2rem; font-weight:700; color:var(--ink)}
+.stepper input{width:100%; min-width:0; height:40px; text-align:center; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-weight:700; font-size:1.1rem; -moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button{-webkit-appearance:none; margin:0}
+.metro{display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:600; color:var(--rest); background:var(--bg3); margin-bottom:10px}
+.metro.on{background:var(--rest); color:var(--bg); border-color:var(--rest)}
+#modal ul{color:var(--ink2); font-size:.9rem; padding-left:18px; margin:8px 0}
+#modal ul li{margin:6px 0}
+#modal ul strong{color:var(--ink)}
+</style>
+
+<div id="app">
+  <header class="brand">
+    <h1>Stepwise<span>.</span></h1>
+    <div class="date num" id="hdr-date"></div>
+  </header>
+
+  <!-- ================= TODAY ================= -->
+  <section class="screen on" id="scr-today">
+    <div class="block-line" id="block-line"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="v num" id="st-week">0</div><div class="l">this week</div></div>
+      <div class="stat"><div class="v num" id="st-rehab">0/3</div><div class="l">strength days</div></div>
+      <div class="stat"><div class="v num" id="st-streak">0</div><div class="l">week streak</div></div>
+    </div>
+
+    <div class="card knee-card" id="gate-card" hidden></div>
+    <div class="today-hero">
+      <div class="eyebrow" id="today-eyebrow">Today</div>
+      <h2 id="today-title"></h2>
+      <div class="meta" id="today-meta"></div>
+      <div class="chips" id="today-chips"></div>
+      <div class="hero-fig" id="hero-fig" hidden><div class="p-fig" id="hero-fig-in"></div></div>
+      <div id="today-action"></div>
+      <details class="preview" id="today-preview"></details>
+      <button class="next-link" id="next-link" type="button" hidden></button>
+    </div>
+
+    <div class="card knee-card" id="knee-card" hidden></div>
+
+    <div class="card due-card" id="bench-due" hidden>
+      <div class="eyebrow">Benchmarks due</div>
+      <p>Five minutes: the stairs, step-downs, sit to stand and calf raises. It’s how you’ll see the knees improving, week to week.</p>
+      <button class="ghost-btn" id="btn-bench-today" style="margin-top:10px">Do benchmarks</button>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">This week</div>
+      <div class="week-strip" id="week-strip"></div>
+      <div class="legend"><span><i class="k"></i>Strength day</span><span><i class="d"></i>Done</span><span class="lg-hint">Tap a day to see it</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Something else instead</div>
+      <div class="swap-list" id="swap-list"></div>
+    </div>
+
+    <div class="card" id="rehab-tip-card">
+      <div class="eyebrow">Knee note</div>
+      <p id="rehab-tip"></p>
+    </div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section class="screen" id="scr-plan">
+    <div class="card">
+      <div class="eyebrow">The week</div>
+      <div id="plan-week"></div>
+      <p style="margin-top:10px">Three strength days of about 30 minutes, plus walks and a stretch day. <strong>Mon, Wed and Fri are the ones to protect</strong> if the week gets squeezed.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">My kit</div>
+      <p style="margin-bottom:4px">You already have bands and weights, so both are ticked. A mat for the floor exercises and the bottom stair are all you need besides.</p>
+      <div id="kit-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Why this plan</div>
+      <h3>Left knee</h3>
+      <p>It started in August after a slide at tennis, and it’s getting better. The X-ray shows <strong>mild wear and tear</strong> (early osteoarthritis): slightly thicker bone under the cartilage and a small bony spur. That’s very common, and on its own it often doesn’t match how much a knee hurts.</p>
+      <p>The pain pattern, worse going <em>down</em> stairs, in low squats and after long sitting, and better with a bath and moving about, fits the kneecap joint being irritated. For both, the main treatment is the same: <strong>stronger thigh and hip muscles</strong>, built up gradually.</p>
+      <h3>Right knee</h3>
+      <p>A knock on hard furniture, with pain at the top of the knee. The same strength work helps, and it should settle with time. If it hasn’t eased in 6–8 weeks, get it checked.</p>
+      <h3>Going downstairs</h3>
+      <p>Going up is fine; coming down hurts. Coming down asks the thigh to control the knee as it bends under your weight. So the knee ladder ends with <strong>slow step-downs</strong>, which are that exact movement, made a little harder each week.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">For the next few weeks</div>
+      <ul class="plain">
+        <li><strong>Skip kneeling and very deep squats</strong> outside the app. Depth comes back as the knee ladder climbs.</li>
+        <li><strong>On stairs</strong>, lead down with the stronger leg and use the rail while it’s sore.</li>
+        <li>Walking is great. Keep doing your usual distance.</li>
+        <li>Judge progress by the morning checks and the fortnightly benchmarks, not day to day.</li>
+        <li><strong>See your GP or a physio</strong> if a knee swells up, locks, gives way, turns hot and red, your calf becomes painful or swollen, or it’s getting worse rather than better.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Pain traffic light</div>
+      <p>Use this during any exercise, any day:</p>
+      <div class="light"><div class="bulb" style="background:var(--good)"></div><p><strong>0–3 out of 10, settled by the next morning</strong>: carry on, and level up when it’s easy. Mild discomfort during rehab loading is normal.</p></div>
+      <div class="light"><div class="bulb" style="background:var(--accent)"></div><p><strong>4–5, or not settled by the next morning</strong>: stay on that rung or drop one, or halve the range. Don’t skip it, shrink it.</p></div>
+      <div class="light"><div class="bulb" style="background:var(--alert)"></div><p><strong>6+, sharp, or pain that changes how you move</strong>: stop that exercise today and come back a rung lower next session.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">When to level up</div>
+      <p>Finish all sets at the top of the range, feeling like you had <strong>2–3 more reps in the tank</strong> and within the green light, two sessions in a row. Then take the next rung. The app asks after each workout. Be honest in both directions.</p>
+      <p><strong>The knee is stricter.</strong> Knees react the next day, so it also needs the next morning to be back to normal: “Easy” plus 2 settled mornings in a row (3 in stage 1). Sore the next morning drops it a rung.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Back to running and tennis</div>
+      <p>Running puts several times your bodyweight through the knee with every step, so it’s built up in steps:</p>
+      <ol class="gates">
+        <li><strong>Knee ladder at the loaded step-down</strong>, step-downs ≤2/10 and a brisk 30-minute walk with no flare → pogo hops unlock in the Back to running ladder.</li>
+        <li><strong>3 × 20s pogo hops and skipping, fine the next morning</strong> → walk-jog: 1 min easy jog / 2 min walk × 8, every other day. Add a little jogging each week while mornings stay settled.</li>
+        <li><strong>20 minutes of easy continuous jogging</strong> → side-to-side steps and gentle tennis movement drills.</li>
+        <li><strong>Drills feel normal</strong> → a relaxed hit, then back to matches. A physio check before this step is a good idea.</li>
+      </ol>
+      <p style="margin-top:8px">These are sensible checkpoints, not guarantees. Mild arthritis isn’t a reason to stop running for good.</p>
+    </div>
+  </section>
+
+  <!-- ================= LIBRARY ================= -->
+  <section class="screen" id="scr-library">
+    <div class="card">
+      <div class="eyebrow">Progression ladders</div>
+      <p style="margin-bottom:8px">Your current rung is highlighted. Adjust freely. The right rung is the one where the last 2 reps feel hard but clean.</p>
+      <div id="lib-ladders"></div>
+      <div class="km-lib" id="km-lib"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Fixed drills</div>
+      <p style="margin-bottom:8px">These don’t level up. They’re warm-up, mobility and rehab staples.</p>
+      <div id="lib-fixed"></div>
+    </div>
+  </section>
+
+  <!-- ================= PROGRESS ================= -->
+  <section class="screen" id="scr-progress">
+    <div class="card">
+      <div class="eyebrow">Benchmarks</div>
+      <p style="margin:0" id="bench-intro"></p>
+      <div id="bench-list"></div>
+      <button class="ghost-btn" id="btn-bench" style="margin-top:12px">Do benchmarks</button>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Body trends</div>
+      <p style="margin:0">How each area has felt, 0 (silent) to 10 (bad). The goal is a drift downward.</p>
+      <div class="trend-grid" id="trend-grid"></div>
+      <button class="ghost-btn" id="btn-checkin" style="margin-top:12px">Check in now</button>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Last 8 weeks</div>
+      <p style="margin:0 0 2px">Sessions per week. Aim for <strong>4–6</strong>, with the three strength days first.</p>
+      <div class="bars" id="prog-bars"></div>
+      <div class="bars-l" id="prog-bars-l"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">History</div>
+      <div class="hist" id="hist"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Data</div>
+      <p>Everything is stored on this phone only. Back up now and then.</p>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="ghost-btn" id="btn-export">Save backup</button>
+        <button class="ghost-btn" id="btn-import">Restore backup</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= PLAYER ================= -->
+<div id="player">
+  <div class="p-top">
+    <button class="p-icon" id="p-quit" aria-label="End session"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="p-title"><div class="sess" id="p-sess"></div><div class="p-elapsed num" id="p-elapsed">0:00</div></div>
+    <button class="p-icon" id="p-sound" aria-label="Sound"></button>
+  </div>
+  <div class="p-segs" id="p-segs"></div>
+  <div class="p-sec"><span id="p-phase"></span><span class="num" id="p-count"></span></div>
+  <div class="p-swap" id="p-swap">
+    <div class="p-stage" id="p-stage">
+      <div class="p-tagline"><span class="p-chip" id="p-chip"></span></div>
+      <div class="p-tempo" id="p-tempo"></div>
+      <div class="p-fig" id="p-fig"></div>
+      <div class="p-paused">Paused</div>
+    </div>
+    <div class="p-info">
+      <div class="p-words">
+        <div class="p-name" id="p-name"></div>
+        <div class="p-meta"><span class="p-dots" id="p-dots"></span><span id="p-detail"></span></div>
+      </div>
+      <div class="p-clock" id="p-clock"></div>
+    </div>
+    <button class="p-cue" id="p-cue" type="button"><span class="ct" id="p-cue-t"></span><span class="cn" id="p-cue-n"></span></button>
+    <div class="p-under"><span class="nx" id="p-next"></span><a class="p-video" id="p-video" target="_blank" rel="noopener"></a></div>
+  </div>
+  <div class="p-ctl">
+    <button class="p-round" id="p-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="p-go" id="p-primary"></button>
+    <button class="p-round" id="p-skip" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+</div>
+<!-- ================= MODAL ================= -->
+<div id="modal-wrap"><div id="modal"></div></div>
+
+<nav><div class="inner"><i class="ind" id="nav-ind"></i>
+  <button data-scr="today" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
+  <button data-scr="plan"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Plan</button>
+  <button data-scr="library"><svg viewBox="0 0 24 24"><path d="M5 4h4v16H5zM11 4h4v16h-4zM17 6l3 1-3.5 14-3-1z"/></svg>Library</button>
+  <button data-scr="progress"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 16v-4M11 16V8M16 16v-7"/></svg>Progress</button>
+</div></nav>
+
+<script src="../figure.js"></script>
+<script src="../moves.js"></script>
+<script>
+// Mum's exercises that reuse an existing Sturdy animation under a new name
+(function(M){ const a={"Goblet squat to a chair":"Box squat to a chair","Loaded step-down":"Step-down","Walk-jog prep":"Strides prep","Wall sit, easy hold":"Tendon wall sit"};
+  for(const k in a) if(!M[k] && M[a[k]]) M[k]=M[a[k]]; })(window.MOVES||{});
+</script>
+<script>
+'use strict';
+/* =====================================================================
+   Data — the program (v1: both knees, early arthritis on the left, pain going downstairs)
+   ===================================================================== */
+const PROGRAM_VERSION = 1;
+
+// Leveled slots: pick the rung, the app writes the workout.
+const LADDERS = {
+  knee: {
+    name:'Knee strength', area:'Knees · stairs',
+    why:'Three stages that rebuild the thigh muscles that control the knee, ending with the exact movement that hurts: stepping down. It only moves up after settled next mornings, because knees often react a day later.',
+    levels:[
+      {n:'Wall sit', stage:1, mode:'time', secs:30, sets:4, d:'Back flat on the wall, feet a step out. Slide down only a little, about a quarter of the way to sitting. Hold it firmly', cues:['Holds like this often ease kneecap pain','Push the floor away through the whole foot','Knee ≤3/10 during, and settled by the next morning']},
+      {n:'Slow high box squat', stage:2, mode:'reps', reps:'10', sets:3, d:'Sit back to a high seat (bed edge, or a chair with a cushion on it). 3s down, light touch, 3s up', cues:['Slow both ways, no flopping onto the seat','Knees point the same way as the toes','Use your hands on your thighs to help at first if you need to']},
+      {n:'Slow box squat to a chair', stage:2, mode:'reps', reps:'10', sets:3, d:'Normal chair height. 3s down, touch the seat, 3s up', cues:['Sit back, as if the chair is a little further away than it is','Weight through the whole foot','Hold a weight at your chest when 3×10 is easy']},
+      {n:'Slow split squat', stage:2, mode:'reps', reps:'8 / side', sets:3, d:'One foot well in front of the other, hand on a wall or chair back. 3s down, 3s up, only part way down', cues:['Torso tall, front heel heavy','Go a little deeper each week, staying ≤3/10','The back knee never touches the floor']},
+      {n:'Step-down', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'Stand on the bottom stair, hand on the rail. Slowly lower the other heel to tap the floor, then straighten back up', cues:['3s down, 2s up. This is going downstairs, in slow motion','Knee stays over the middle toes, don’t let it drift in','Be honest at the next morning’s check']},
+      {n:'Goblet squat to a chair', stage:3, mode:'reps', reps:'10', sets:3, needs:'kb', d:'Hold a weight against your chest. 3s down to touch the chair, 2s up', cues:['Elbows tucked in, chest tall','Heavier rather than more reps once 3×10 is easy','Knees over the middle toes'],
+        alt:{n:'Slow box squat to a chair', mode:'reps', reps:'12', sets:3, d:'Normal chair height. 3s down, touch, 3s up', cues:['Hold a full bag of shopping at your chest to add weight','Becomes the goblet squat once you tick weights in My kit']}},
+      {n:'Loaded step-down', stage:3, mode:'reps', reps:'8 / side', sets:3, needs:'kb', d:'Step-down from the bottom stair holding a weight on the same side as the standing leg', cues:['Same slow 3s lowering','Hold the rail with the other hand','Unlocks the first springy work in Back to running'],
+        alt:{n:'Step-down', mode:'reps', reps:'10 / side', sets:3, d:'Step-down from the bottom stair, slower: 4s down', cues:['Slower is harder','Becomes the loaded step-down once you tick weights in My kit']}},
+      {n:'Rear-foot-elevated split squat', stage:3, mode:'reps', reps:'8 / side', sets:3, d:'Back foot on the sofa or a chair. 3s down, 2s up, hand on a wall', cues:['Front shin fairly upright','Only as deep as stays ≤3/10','The top rung. Strong enough for stairs, running and tennis']},
+    ]
+  },
+  hip: {
+    name:'Side-of-hip ladder', area:'Hips → knees',
+    why:'The muscles on the side of the hip stop the thigh rolling inward, which takes strain off the kneecap. They can be worked hard without bothering the knee at all.',
+    levels:[
+      {n:'Clamshell', mode:'reps', reps:'12 / side', sets:3, d:'On your side, knees bent, heels together. Open the top knee like a clam', cues:['Hips stacked, don’t roll back','2s up, 2s down','Loop band above the knees when it’s easy']},
+      {n:'Side-lying leg raise', mode:'reps', reps:'12 / side', sets:3, d:'On your side, bottom knee bent, top leg straight and slightly behind you. Lift it', cues:['Toes point forward, not up','Lead with the heel','Felt at the front of the hip? Move the leg further back']},
+      {n:'Side-lying raise, 3s hold', mode:'reps', reps:'12 / side', sets:3, d:'Same, holding 3s at the top of every rep', cues:['It should burn on the side of the hip','Ankle weight on once it’s easy']},
+      {n:'Standing hip hike', mode:'reps', reps:'12 / side', sets:3, d:'Stand side-on on the bottom stair, one foot hanging off. Let that hip drop, then hike it up using the standing hip', cues:['Hold the rail','The pelvis does the moving','2s down, 2s up']},
+    ]
+  },
+  glute: {
+    name:'Glute bridge ladder', area:'Hips / knees',
+    why:'Strong glutes share the work of stairs and squats with the thighs, so the knee does less.',
+    levels:[
+      {n:'Glute bridge', mode:'reps', reps:'12', sets:3, d:'On your back, knees bent, feet hip-width. Drive the hips up, pause 2s at the top', cues:['Squeeze the bottom at the top','Push through the heels','Ribs down, don’t arch the lower back']},
+      {n:'Single-leg glute bridge', mode:'reps', reps:'8 / side', sets:3, d:'One foot down, the other knee hugged loosely to the chest', cues:['Hips stay level, no tilting','Pause at the top','Lower with control']},
+      {n:'Feet-elevated single-leg bridge', mode:'reps', reps:'8 / side', sets:3, d:'Working foot on a low step or the sofa edge', cues:['Bigger range, same level hips','2s pause at the top','Rest a weight on your hips when it’s easy']},
+    ]
+  },
+  hinge: {
+    name:'Hinge ladder', area:'Hamstrings / balance',
+    why:'Bending at the hips trains the hamstrings and balance, both of which steady the knee on the way down a step.',
+    levels:[
+      {n:'Broomstick hinge', mode:'reps', reps:'10', sets:3, d:'Broom handle along your back, touching head, mid-back and tailbone. Push the hips back, then stand tall', cues:['All three points stay on the stick','Soft knees, hips travel back not down','Feel the back of the thighs stretch']},
+      {n:'Single-leg RDL reach', mode:'reps', reps:'8 / side', sets:3, d:'Hinge forward on one leg, the back leg lifts, fingertips reach toward the shin', cues:['Touch a wall or chair lightly if wobbly','Back leg and body move as one plank','Hips square to the floor']},
+      {n:'Tempo single-leg RDL', mode:'reps', reps:'8 / side', sets:3, d:'Same, 4s down, 1s pause, holding a weight in the opposite hand', cues:['Slow is the load','Weight hangs straight down','Light hand on a wall is fine']},
+    ]
+  },
+  calf: {
+    name:'Calf ladder', area:'Calves / running',
+    why:'Strong calves soak up the landing on stairs and when running, so less of it reaches the knee.',
+    levels:[
+      {n:'Slow calf raises', mode:'reps', reps:'15', sets:3, d:'Both feet, 2s up, 1s pause, 3s down', cues:['Rise over the big toe, not the little toes','Hold a wall for balance','3s lowering']},
+      {n:'Single-leg calf raises', mode:'reps', reps:'12 / side', sets:3, d:'One foot, same slow tempo, flat floor', cues:['Full height each rep','Fingertips on a wall','Stop 2 reps before you have to']},
+      {n:'Single-leg raises off a step', mode:'reps', reps:'12 / side', sets:3, d:'Ball of the foot on the stair edge, heel drops below, rise to full height', cues:['Hold the rail','3s down into the stretch','Full height at the top']},
+      {n:'Weighted single-leg raises', mode:'reps', reps:'10 / side', sets:3, d:'Off a step, holding a weight on the working side', cues:['Same slow tempo','Add weight rather than reps']},
+    ]
+  },
+  run: {
+    name:'Back to running', area:'Running · tennis',
+    why:'Running and tennis are springy, and springy work loads the knee hard. So these wait until the knee ladder reaches the loaded step-down, then build up one step at a time.',
+    levels:[
+      {n:'Fast march', mode:'time', secs:30, sets:3, d:'March on the spot, knees up, quick arms. No impact', cues:['Tall posture','Drive the arms','The springy rungs unlock as the knee gets stronger']},
+      {n:'Pogo hops', mode:'time', secs:20, sets:3, d:'Small springy bounces on the spot, both feet, hold a worktop if you like', cues:['Tiny, quiet bounces','Land through the front of the foot','Fine the next morning? Then it’s right']},
+      {n:'Skipping', mode:'time', secs:30, sets:3, d:'Skip on the spot (imaginary rope), light and quick on the balls of the feet', cues:['Relaxed and low','Quiet landings','Check the knee the next morning before levelling up']},
+      {n:'Walk-jog prep', mode:'time', secs:30, sets:3, d:'Skipping here, then on your next walk: 1 min easy jog, 2 min walk, × 8. Add a little jogging each week while mornings stay settled', cues:['Flat ground, good trainers','Knee over 3/10 or sore next morning: back a rung','Side-to-side tennis movement comes after 20 min of easy jogging']},
+    ]
+  },
+};
+
+// Fixed drills (no levels). `needs` = only included when that kit is ticked.
+const DRILLS = {
+  hipopeners:  {n:'Hip circles & leg swings', mode:'time', secs:60, d:'10 big hip circles each way, then 10 front-back leg swings per leg', cues:['Hold a wall','Start small, grow the circle','Loose and easy'], area:'Warm-up'},
+  bridgewarm:  {n:'Glute bridges (easy)', mode:'reps', reps:'12', sets:1, d:'Smooth, easy bridges to wake the hips up', cues:['Pause 1s at the top','Ribs down'], area:'Warm-up'},
+  march:       {n:'Fast march', mode:'time', secs:45, d:'March on the spot, knees up, quick arms, no impact', cues:['Tall posture','Drive the arms'], area:'Warm-up'},
+  stepup:      {n:'Step-up', mode:'reps', reps:'10 / side', sets:2, d:'Bottom stair, hand on the rail. Step up with one leg, bring the other up, step down. Do all of one side, then the other', cues:['Whole foot on the step','Push through the heel of the top foot','Going up is your strong direction. This builds on it'], area:'Knee'},
+  kneeext:     {n:'Seated knee extension', mode:'reps', reps:'12 / side', sets:3, d:'Sit tall with a band round the ankle and the chair leg (or an ankle weight). Straighten the knee from bent to about halfway, 2s up, 3s down', cues:['Stop short of fully straight. That range is easiest on the kneecap','Slow lowering','Stronger band when 3×12 is easy'], area:'Knee'},
+  bandwalk:    {n:'Lateral band walk', mode:'reps', reps:'10 steps each way', sets:2, needs:'band', d:'Loop band just above the knees, slight squat, step sideways', cues:['Toes forward, knees pushed out against the band','Stay low and level','Slow steps beat big steps'], area:'Hips'},
+  isowall:     {n:'Wall sit, easy hold', mode:'time', secs:45, sets:5, d:'Back on the wall, knees bent only a little. Hold it firmly. Steady holds like this calm a grumpy knee', cues:['Hard enough to feel the thighs working, knee ≤3/10','If it bites, slide up a little','Knees over the middle toes'], area:'Knee mode'},
+  balance:     {n:'Single-leg balance, eyes busy', mode:'time', secs:30, perSide:true, d:'Stand on one leg near a worktop, turn your head slowly side to side', cues:['Barefoot','Fingertips ready on the worktop','Eyes closed for 10s once it’s easy'], area:'Balance'},
+  quadstretch: {n:'Standing quad stretch', mode:'time', secs:30, perSide:true, d:'Hold a chair. Bring one heel toward your bottom, knees together', cues:['Tuck the pelvis to feel it more','Stop short of full bend if the kneecap complains','A towel round the ankle helps if you can’t reach'], area:'Cool-down'},
+  calfstretch: {n:'Wall calf stretch', mode:'time', secs:30, perSide:true, d:'Back leg straight, heel down, lean to the wall; then bend the back knee a little', cues:['Straight-knee then bent-knee','Heel stays down'], area:'Cool-down'},
+  hamfloss:    {n:'Hamstring floss', mode:'time', secs:40, perSide:true, d:'On your back, hold behind one thigh, slowly straighten and bend the knee', cues:['Gentle stretch, never a yank','Slow and smooth'], area:'Cool-down'},
+  figure4:     {n:'Figure-4 stretch', mode:'time', secs:45, perSide:true, d:'On your back, ankle over the opposite knee, draw that thigh toward you', cues:['Flex the crossed foot','Breathe long'], area:'Stretch'},
+  supinetwist: {n:'Supine twist', mode:'time', secs:45, perSide:true, d:'On your back, knees drop to one side, arms wide', cues:['Both shoulders stay down-ish','Breathe long'], area:'Stretch'},
+  legswall:    {n:'Legs up the wall', mode:'time', secs:90, d:'Lie down, legs resting up a wall, arms open', cues:['Nothing to do here','Long exhales'], area:'Stretch'},
+};
+
+// Sessions. Items: {slot:'knee'} pulls the current ladder rung; {drill:'march'} is fixed.
+const SESSIONS = {
+  strA: { title:'Strength A: Knees & Hips', short:'Knees', rehab:true,
+    desc:'The knee and side-of-hip ladders, step-ups, then calves and balance.',
+    focus:['Knees','Side of hip','Calves','Balance'],
+    blocks:[
+      {h:'Warm-up'}, {drill:'march'}, {drill:'hipopeners'}, {drill:'bridgewarm'},
+      {h:'Knees & hips'}, {slot:'knee', rest:45}, {drill:'stepup', rest:40}, {slot:'hip', rest:30},
+      {h:'Calves & balance'}, {slot:'calf', rest:40}, {drill:'balance'},
+      {h:'Cool-down'}, {drill:'quadstretch'}, {drill:'calfstretch'},
+    ]},
+  walk: { title:'Walk + Stretch', short:'Walk',
+    desc:'Your usual walk, as far as is comfortable, then a few gentle stretches.',
+    focus:['Walking','Stretch'],
+    blocks:[
+      {drill:'calfstretch'}, {drill:'quadstretch'}, {drill:'hamfloss'}, {drill:'figure4'},
+    ]},
+  strB: { title:'Strength B: Hips & Knees', short:'Hips', rehab:true,
+    desc:'Hinge ladder and band walks, the knee ladder, then calves and the back-to-running ladder.',
+    focus:['Hamstrings','Side of hip','Knees','Calves'],
+    blocks:[
+      {h:'Warm-up'}, {drill:'march'}, {drill:'hipopeners'},
+      {h:'Hips'}, {slot:'hinge', rest:40}, {drill:'bandwalk', rest:30},
+      {h:'Knees'}, {slot:'knee', rest:45}, {drill:'kneeext', rest:30},
+      {h:'Calves & running'}, {slot:'calf', rest:40}, {slot:'run', rest:40},
+      {h:'Cool-down'}, {drill:'hamfloss'}, {drill:'quadstretch'},
+    ]},
+  stretch: { title:'Stretch + Balance', short:'Stretch',
+    desc:'Gentle stretches and balance. No kneeling. A good swap for a tired day.',
+    focus:['Mobility','Balance'],
+    blocks:[
+      {drill:'hipopeners'}, {drill:'balance'}, {drill:'calfstretch'}, {drill:'quadstretch'},
+      {drill:'hamfloss'}, {drill:'figure4'}, {drill:'supinetwist'}, {drill:'legswall'},
+    ]},
+  strC: { title:'Strength C: Stairs', short:'Stairs', rehab:true,
+    desc:'The knee ladder and step-ups, glutes and side of hip, then running and balance.',
+    focus:['Knees','Glutes','Side of hip','Running'],
+    blocks:[
+      {h:'Warm-up'}, {drill:'march'}, {drill:'hipopeners'},
+      {h:'Knees & hips'}, {slot:'knee', rest:45}, {drill:'stepup', rest:40}, {slot:'glute', rest:40}, {slot:'hip', rest:30},
+      {h:'Running & balance'}, {slot:'run', rest:40}, {drill:'balance'},
+      {h:'Cool-down'}, {drill:'quadstretch'}, {drill:'calfstretch'},
+    ]},
+  rest: { title:'Rest Day', short:'Rest', desc:'Rest is when the muscles actually get stronger. A gentle walk is fine.', focus:[], blocks:[] },
+};
+
+// Monday-first week
+const WEEK = ['strA','walk','strB','stretch','strC','walk','rest'];
+const DAYNAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const REHAB_IDS = ['strA','strB','strC'];
+
+const KIT = [
+  {k:'band',  n:'Loop resistance bands', p:'you have these', why:'Side-of-hip work, which takes strain off the kneecap.', unlocks:'Lateral band walks (Wed)'},
+  {k:'kb',    n:'Hand weights', p:'you have these', why:'Adds load to squats, step-downs and calf raises once body weight gets easy.', unlocks:'Goblet squats and loaded step-downs (knee ladder)'},
+];
+
+// Fortnightly benchmarks
+const TESTS = [
+  {k:'stairsDown', label:'Going down a flight of stairs', unit:'/10', max:10, better:-1},
+  {k:'stepDown',   label:'Knee · 10 step-downs',           unit:'/10', max:10, better:-1},
+  {k:'sts',        label:'Sit to stand in 30s',            unit:'reps', max:30, better:1},
+  {k:'calfL',      label:'Calf raises · left',             unit:'reps', max:40, better:1},
+  {k:'calfR',      label:'Calf raises · right',            unit:'reps', max:40, better:1},
+];
+const DRIFT = ['No','A bit','Yes'];
+
+// Knee ladder stages. Stage 4 (springy work) lives in the Back to running ladder and unlocks at KNEE_SPRING.
+const KNEE_STAGES = {1:{t:'Holds', d:'steady holds settle the knee'}, 2:{t:'Slow two-leg reps', d:'3s down, 3s up'}, 3:{t:'Stairs and single-leg', d:'stepping down, with more load'}};
+const RUN_SPRING  = LADDERS.run.levels.findIndex(v=>v.n==='Pogo hops');
+const KNEE_SPRING = LADDERS.knee.levels.findIndex(v=>v.n==='Loaded step-down');
+const passesNeeded = i => LADDERS.knee.levels[i].stage===1 ? 3 : 2;
+
+const REHAB_TIPS = [
+  'Going downstairs: lead with the stronger leg for now, and keep a hand on the rail. The step-downs in the knee ladder are rebuilding exactly that movement.',
+  'Mild arthritis on an X-ray is very common and often doesn’t match how much a knee hurts. Strength work is the main treatment for it.',
+  'Knee clicks and crackles are common in pain-free knees too. They aren’t a sign of damage or a reason to avoid exercise.',
+  'Knees react a day later. That’s why the next-morning check, not how the session felt, decides when the knee ladder moves.',
+  'Long sitting in the evening stiffens it up. Stand and walk around for a minute every half hour, or straighten and bend the knees in your chair.',
+  'A warm bath helps, so use it. Heat before a session or after a long day is fine.',
+  'Mon, Wed and Fri are the strength days. If the week gets squeezed, protect those three.',
+  'Skip kneeling for now. Use a cushion or a low stool for jobs near the floor.',
+  'Balance work counts: stand on one leg while you brush your teeth.',
+];
+
+/* =====================================================================
+   State
+   ===================================================================== */
+const store = {
+  get(k, fb){ try{ const v = localStorage.getItem('stepwise.'+k); return v===null ? fb : JSON.parse(v); }catch(e){ return fb; } },
+  set(k, v){ try{ localStorage.setItem('stepwise.'+k, JSON.stringify(v)); }catch(e){} },
+};
+let levels  = store.get('levels', {});   // slotId → rung index
+let history = store.get('history', []);  // [{d:'2026-08-21', id, title, mins}]
+let painLog = store.get('pain', []);     // [{d, knee, stairs}], one per day
+let kit     = store.get('kit', {band:true, kb:true}); // she has bands and weights
+let tests   = store.get('tests', []);    // [{d, stairsDown, stepDown, drift, sts, calfL, calfR}]
+let blockStart = store.get('blockStart', null);
+let kneeMode = store.get('kneeMode', null);  // {since, rung} while the knee is flaring, else null
+// Knee ladder only moves on settled next mornings. pending = the last knee session awaiting its morning check.
+let kneeGate = store.get('kneeGate', null) || {passes:0, pending:null, result:null};
+const saveGate = () => store.set('kneeGate', kneeGate);
+const AREAS = [ ['knee','Knees'], ['stairs','Going downstairs'] ];
+
+// Ask the browser not to evict our data under storage pressure.
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+const lvl = id => Math.max(0, Math.min(levels[id]||0, LADDERS[id].levels.length-1));
+// A rung that needs kit you haven't ticked swaps to its kit-free stand-in.
+function rungDef(id, i){ const v=LADDERS[id].levels[i]; return (v.needs && !kit[v.needs] && v.alt) ? v.alt : v; }
+const curDef = id => rungDef(id, lvl(id));
+
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const todayISO = () => iso(new Date());
+const dowMon0 = d => (d.getDay()+6)%7; // Monday = 0
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const daysBetween = (a,b) => Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
+const fmtDay = d => new Date(d+'T12:00').toLocaleDateString(undefined,{day:'numeric', month:'short'});
+
+/* ---- one-off migrations between program versions ---- */
+function migrate(){
+  if(store.get('progv', 0) >= PROGRAM_VERSION) return null;
+  store.set('progv', PROGRAM_VERSION);
+  return null;
+}
+const migrated = migrate();
+
+/* =====================================================================
+   Session building
+   ===================================================================== */
+function blockDef(b){ return b.slot ? curDef(b.slot) : DRILLS[b.drill]; }
+function blockActive(b){ if(b.h) return true; if(b.unless && kit[b.unless]) return false; const d=blockDef(b); const need=b.needs||d.needs; return !need || !!kit[need]; }
+
+/* ---- knee mode: while the knee is flaring, swap knee loading for easy isometric holds ----
+   The knee ladder rung is frozen (not levelled) and everything else in the week stays the same. */
+const KNEE_SWAP = { kneeext:null, stepup:'march' };
+function sessBlocks(sid){
+  const bl = SESSIONS[sid].blocks;
+  if(!kneeMode) return bl;
+  const out=[]; let iso=false;
+  bl.forEach(b=>{
+    let nb=b;
+    if(b.slot==='knee') nb={drill:'isowall'};
+    else if(b.slot==='run') nb={drill:'march'};
+    else if(b.drill && b.drill in KNEE_SWAP) nb = KNEE_SWAP[b.drill] ? Object.assign({}, b, {drill:KNEE_SWAP[b.drill]}) : null;
+    if(nb && nb.drill==='isowall'){ if(iso) return; iso=true; nb={drill:'isowall', rest:60}; }
+    if(nb) out.push(nb);
+  });
+  return out;
+}
+const kneeDays = () => kneeMode ? daysBetween(kneeMode.since, todayISO())+1 : 0;
+function kneeLogs(){ return kneeMode ? painLog.filter(p=>p.d>=kneeMode.since && typeof p.knee==='number') : []; }
+function kneeSuggest(){
+  if(kneeMode) return false;
+  const p=lastPain(); if(!p || typeof p.knee!=='number') return false;
+  if(kneeGate.result && kneeGate.result.km && kneeGate.result.d===todayISO()) return false; // the morning-check card is already offering it
+  return p.knee>=3 && daysBetween(p.d, todayISO())<=2 && store.get('kneeDismissed',null)!==p.d;
+}
+function startKneeMode(){
+  kneeMode={since:todayISO(), rung:lvl('knee')};
+  kneeGate={passes:0, pending:null, result:null}; saveGate();
+  store.set('kneeMode', kneeMode); render(); toast('Knee mode on');
+}
+function endKneeMode(auto){
+  if(!kneeMode) return;
+  // ease back in one rung below where you were
+  levels.knee=Math.max(0, kneeMode.rung-1); store.set('levels', levels);
+  kneeGate.passes=0; kneeGate.pending=null; saveGate();
+  kneeMode=null; store.set('kneeMode', null);
+  store.set('kneeEnded', {d:todayISO(), auto:!!auto});
+  render();
+}
+// Done when the last 3 knee scores since it started are all ≤2.
+function checkKneeExit(){
+  if(!kneeMode) return;
+  const l=kneeLogs().slice(-3);
+  if(l.length===3 && l.every(p=>p.knee<=2)) endKneeMode(true);
+}
+function logKnee(v){
+  const d=todayISO(); const e=painLog.find(p=>p.d===d);
+  if(e) e.knee=v; else { painLog.push({d, knee:v}); painLog.sort((a,b)=>a.d<b.d?-1:1); }
+  store.set('pain', painLog);
+  checkKneeExit(); render();
+}
+
+/* ---- knee gate: the knee ladder moves on next-morning checks, not on how the session felt ----
+   After a knee session the rung waits for the next morning. Back to normal = a pass.
+   Up a rung needs "Easy" plus passesNeeded() settled mornings in a row. Sore next morning = down a rung. */
+function kneeSessionDone(choice){
+  const cur=lvl('knee');
+  if(choice==='down'){ levels.knee=Math.max(0,cur-1); kneeGate.passes=0; }
+  kneeGate.pending={d:todayISO(), rung:lvl('knee'), rating:choice||'keep'};
+  kneeGate.result=null; saveGate();
+}
+const gateDue = () => !kneeMode && kneeGate.pending && kneeGate.pending.d < todayISO();
+// A missed check (3+ days on) can't tell us about the next morning, so it quietly lapses.
+function expireGate(){
+  const p=kneeGate.pending;
+  if(p && daysBetween(p.d, todayISO())>2){ kneeGate.pending=null; saveGate(); }
+}
+function resolveGate(ans){
+  const p=kneeGate.pending; if(!p) return;
+  const L=LADDERS.knee, cur=lvl('knee'), name=i=>esc(rungDef('knee',i).n);
+  let msg='', km=false;
+  if(ans==='ok'){
+    kneeGate.passes = p.rating==='down' ? 1 : kneeGate.passes+1;
+    const need=passesNeeded(cur), n=kneeGate.passes;
+    if(p.rating==='up' && n>=need && cur===p.rung && cur<L.levels.length-1){
+      levels.knee=cur+1; kneeGate.passes=0;
+      const st=L.levels[cur+1].stage;
+      msg='Settled '+need+' mornings in a row. You’re up to <strong>'+name(cur+1)+'</strong>.'+
+        (st!==L.levels[cur].stage ? ' That starts <strong>Stage '+st+': '+esc(KNEE_STAGES[st].t)+'</strong>. Go gently the first time.' : '');
+    } else if(n>=need && cur<L.levels.length-1){
+      msg='Settled. Ready to move up: rate the knee “Easy” after your next session, if it honestly is.';
+    } else if(p.rating==='down'){
+      msg='Settled. You stay on <strong>'+name(cur)+'</strong> and build from here.';
+    } else {
+      msg='Settled. That’s '+Math.min(n,need)+' of '+need+' settled mornings in a row on <strong>'+name(cur)+'</strong>.';
+    }
+  } else {
+    kneeGate.passes=0;
+    const drop = p.rating!=='down' && cur>0;
+    if(drop) levels.knee=cur-1;
+    msg = drop ? 'That was a bit much. You’re back on <strong>'+name(cur-1)+'</strong> for now, and it moves up again after settled mornings.'
+               : 'You stay on <strong>'+name(cur)+'</strong> for now.';
+    if(ans==='worse'){ km=true; msg+=' If it’s still grumbling tomorrow, knee mode swaps the squats for shallow holds until it calms down.'; }
+  }
+  kneeGate.pending=null; kneeGate.result={d:todayISO(), ans, msg, km};
+  store.set('levels', levels); saveGate(); buzz(8); render();
+}
+function renderGateCard(){
+  const c=$('#gate-card'); expireGate();
+  const r=kneeGate.result;
+  if(gateDue()){
+    const p=kneeGate.pending, when=daysBetween(p.d, todayISO())===1 ? 'Yesterday' : 'On '+fmtDay(p.d);
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee · morning check</div>'+
+      '<p>'+when+' you did <strong>'+esc(rungDef('knee',p.rung).n)+'</strong>. Do one slow half-squat. Compared with before that session, how’s the knee?</p>'+
+      '<div class="gate-btns"><button data-gate="ok">Back to normal</button><button data-gate="sore">Still a bit sore</button><button data-gate="worse">Worse</button></div>'+
+      '<p class="km-note">This is what moves the knee ladder. Sore the next morning means that session was a bit too much, so it steps back rather than waiting for it to flare.</p>';
+    c.querySelectorAll('[data-gate]').forEach(b=>b.addEventListener('click', ()=>resolveGate(b.dataset.gate)));
+  } else if(r && r.d===todayISO() && !r.hidden && !kneeMode){
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee · morning check</div><p>'+r.msg+'</p>'+
+      (r.km ? '<div style="display:flex;gap:8px;margin-top:10px"><button class="ghost-btn" id="gc-km">Turn on knee mode now</button><button class="link-btn" id="gc-hide">Not now</button></div>'
+            : '<button class="link-btn" id="gc-hide">Hide</button>');
+    const k=$('#gc-km'); if(k) k.addEventListener('click', startKneeMode);
+    $('#gc-hide').addEventListener('click', ()=>{ kneeGate.result.hidden=true; saveGate(); render(); });
+  } else c.hidden=true;
+}
+
+function buildSteps(sid){
+  const out=[]; const slots=[]; let sec='';
+  sessBlocks(sid).forEach(b=>{
+    if(b.h){ sec=b.h; return; }
+    if(!blockActive(b)) return;
+    const def=blockDef(b);
+    if(b.slot && !slots.includes(b.slot)) slots.push(b.slot);
+    const sets = b.sets || def.sets || 1, rest=b.rest||0;
+    const sides = def.perSide ? ['Left','Right'] : [null];
+    for(let set=1; set<=sets; set++){
+      sides.forEach((side,si)=>{
+        out.push({ kind:'work', sec, name:def.n, mode:def.mode, secs:def.secs, reps:def.reps, est:def.est, set, sets, side,
+          detail:(sets>1?('Set '+set+' of '+sets):'') + (side?((sets>1?' · ':'')+side+' side'):''),
+          cues:def.cues, sub:def.d });
+        const last = set===sets && si===sides.length-1;
+        if(rest && !last) out.push({kind:'rest', secs:rest});
+      });
+    }
+    if(rest) out.push({kind:'rest', secs:rest});
+  });
+  while(out.length && out[out.length-1].kind==='rest') out.pop();
+  return {steps:out, slots};
+}
+
+// Rough duration: reps ≈ 4s each (per side counted), plus a few seconds to set up.
+function estMins(sid){
+  if(!sessBlocks(sid).length) return 0;
+  let t=0;
+  buildSteps(sid).steps.forEach(x=>{
+    if(x.kind==='rest') t+=x.secs;
+    else if(x.mode==='time') t+=x.secs+6;
+    else if(x.est) t+=x.est;
+    else { const n=parseInt(x.reps,10)||10; const k=/side|each way/.test(x.reps)?2:1; t+=n*k*4+12; }
+  });
+  return Math.max(5, Math.round(t/60/5)*5);
+}
+
+function outline(sid){
+  const groups=[]; let cur=null;
+  sessBlocks(sid).forEach(b=>{
+    if(b.h){ cur={h:b.h, items:[]}; groups.push(cur); return; }
+    if(!blockActive(b)) return;
+    if(!cur){ cur={h:'Flow', items:[]}; groups.push(cur); }
+    const d=blockDef(b), sets=b.sets||d.sets||1;
+    const dose = d.mode==='time' ? ((sets>1?sets+' × ':'')+d.secs+'s'+(d.perSide?' / side':'')) : ((sets>1?sets+' × ':'')+d.reps);
+    cur.items.push({n:d.n, dose, slot:!!b.slot});
+  });
+  // collapse repeated circuit rounds
+  const out=[]; groups.forEach(g=>{
+    const prev=out[out.length-1];
+    if(prev && /^Round/.test(g.h) && /^Round/.test(prev.h) && JSON.stringify(prev.items)===JSON.stringify(g.items)){ prev.times=(prev.times||1)+1; }
+    else out.push(Object.assign({}, g));
+  });
+  out.forEach(g=>{ if(g.times) g.h='Circuit × '+g.times; });
+  return out.filter(g=>g.items.length);
+}
+function outlineHTML(sid){
+  return outline(sid).map(g=>
+    '<div class="pv-group"><div class="ph">'+esc(g.h)+'</div>'+g.items.map(i=>
+      '<div class="pv-item'+(i.slot?' lad':'')+'"><span><button class="pvn" data-demo="'+esc(i.n)+'">'+esc(i.n)+'</button></span><span class="num">'+esc(i.dose)+'</span></div>').join('')+'</div>'
+  ).join('');
+}
+const hasRungs = sid => sessBlocks(sid).some(b=>b.slot && blockActive(b));
+
+/* =====================================================================
+   Screens
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+
+function moveInd(){ const bs=[...document.querySelectorAll('nav button')], i=bs.findIndex(x=>x.classList.contains('on')); $('#nav-ind').style.transform='translateX('+(i*100)+'%)'; }
+document.querySelectorAll('nav button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(!b.classList.contains('on')) viewDate=null; // coming back to Today shows today
+    document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x===b));
+    moveInd();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+    $('#scr-'+b.dataset.scr).classList.add('on');
+    window.scrollTo(0,0);
+    render();
+  });
+});
+
+function isoOffset(days){ const d=new Date(); d.setDate(d.getDate()+days); return iso(d); }
+function doneOn(d){ return history.some(h=>h.d===d); }
+
+function weekDates(offsetWeeks){
+  const now=new Date(); now.setDate(now.getDate()-7*offsetWeeks);
+  const mon=new Date(now); mon.setDate(now.getDate()-dowMon0(now));
+  const out=[]; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); out.push(iso(d)); }
+  return out;
+}
+function weekCount(offsetWeeks){ return weekDates(offsetWeeks).filter(doneOn).length; }
+function rehabCount(offsetWeeks){
+  const ds=weekDates(offsetWeeks);
+  return Math.min(3, ds.filter(d=>history.some(h=>h.d===d && REHAB_IDS.includes(h.id))).length);
+}
+function blockWeek(){ return blockStart ? Math.floor(Math.max(0,daysBetween(blockStart,todayISO()))/7)+1 : 1; }
+function lastTest(){ return tests.length ? tests[tests.length-1] : null; }
+function benchDue(){ const t=lastTest(); return !t || daysBetween(t.d, todayISO())>=14; }
+
+let heroStage=null;
+// Look ahead: the hero can show another day's session. null = today.
+let viewDate=null, lastPvKey=null;
+const DAYLONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function peekDay(d){
+  viewDate = (!d || d===todayISO() || d===viewDate) ? null : d;
+  buzz(6); renderToday();
+  const hero=$('.today-hero'), y=hero.getBoundingClientRect().top+window.scrollY-12;
+  if(hero.getBoundingClientRect().top<0) window.scrollTo({top:y, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}
+function renderToday(){
+  const now = new Date();
+  $('#hdr-date').textContent = now.toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short'});
+  const dow = dowMon0(now);
+  const sid = WEEK[dow];
+  if(viewDate===todayISO()) viewDate=null;
+  const peek = !!viewDate;
+  const vday = peek ? viewDate : todayISO();
+  const vdow = dowMon0(new Date(vday+'T12:00'));
+  const vsid = WEEK[vdow];
+  const s = SESSIONS[vsid];
+  const did = doneOn(vday);
+  const off = daysBetween(todayISO(), vday);
+
+  const wk = blockWeek();
+  $('#block-line').innerHTML = '<span>Knee plan · week '+Math.min(wk,8)+' of 8</span><span class="bar"><i style="width:'+Math.min(100,wk/8*100)+'%"></i></span>'+
+    (wk>=6 ? '<span class="rt">'+(wk>8?'time to reassess':'reassess soon')+'</span>' : '');
+
+  $('#st-week').textContent = weekCount(0);
+  $('#st-rehab').textContent = rehabCount(0)+'/3';
+  let streak = weekCount(0)>=1 ? 1 : 0; for(let w=1; w<520; w++){ if(weekCount(w)>=3) streak++; else break; }
+  $('#st-streak').textContent = streak;
+
+  $('.today-hero').classList.toggle('peek', peek);
+  const when = off===1 ? 'Tomorrow · '+DAYNAMES[vdow] : off===-1 ? 'Yesterday · '+DAYNAMES[vdow] : DAYLONG[vdow];
+  $('#today-eyebrow').textContent = peek ? (when + (s.rehab?' · strength day':'') + (did?' · done':''))
+    : did ? 'Done for today' : ('Today · ' + DAYNAMES[dow] + (s.rehab?' · strength day':''));
+  $('#today-title').textContent = s.title;
+  $('#today-meta').textContent = (vsid==='rest' ? '' : '~'+estMins(vsid)+' min · ') + s.desc;
+  $('#today-chips').innerHTML = (s.focus||[]).map(f=>'<span class="chip">'+esc(f)+'</span>').join('');
+  $('#today-chips').style.display = (s.focus&&s.focus.length) ? '' : 'none';
+
+  // headline move: the first ladder rung in the shown session, animating in the hero
+  const hf=$('#hero-fig');
+  const sb = sessBlocks(vsid);
+  const lead = sb.find(b=>b.slot) || sb.find(b=>b.drill);
+  const leadName = lead ? blockDef(lead).n : null;
+  const showHero = !!(leadName && window.Figure && window.MOVES && MOVES[leadName] && (peek || !did));
+  hf.hidden = !showHero;
+  if(showHero){
+    if(!heroStage) heroStage=Figure.Stage($('#hero-fig-in'), {aspect:3});
+    if(heroStage._name!==leadName){ heroStage.resize(stageAspect($('#hero-fig-in'))); heroStage.set(MOVES[leadName]); heroStage._name=leadName; }
+    if($('#scr-today').classList.contains('on') && !$('#player').classList.contains('on')) heroStage.play(); else heroStage.pause();
+  } else if(heroStage) heroStage.pause();
+
+  const act = $('#today-action');
+  if(peek){
+    act.innerHTML = '<div class="peek-acts"><button class="ghost-btn" id="peek-back">← Back to today</button>'+
+      (vsid!=='rest' && vsid!==sid ? '<button class="link-btn" id="peek-go">Do it today</button>' : '')+'</div>';
+    $('#peek-back').addEventListener('click', ()=>peekDay(null));
+    const pg=$('#peek-go'); if(pg) pg.addEventListener('click', ()=>{ viewDate=null; startSession(vsid); });
+  } else if(sid==='rest'){
+    act.innerHTML = did ? '<p style="color:var(--good);font-weight:600;margin:0">Logged. See you tomorrow.</p>'
+      : '<button class="ghost-btn" id="log-rest">Mark rest day taken</button>';
+    const lr = $('#log-rest'); if(lr) lr.addEventListener('click', ()=>{ logSession('rest','Rest Day',0); render(); });
+  } else if(did){
+    const h = history.filter(x=>x.d===todayISO()).map(x=>x.title).join(', ');
+    act.innerHTML = '<p style="color:var(--good);font-weight:600;margin:0 0 10px">Completed: '+esc(h)+'</p><button class="ghost-btn" id="again-btn">Do another session</button>';
+    $('#again-btn').addEventListener('click', ()=>startSession(sid));
+  } else {
+    act.innerHTML = '<button class="big-btn" id="start-btn">Start session</button>';
+    $('#start-btn').addEventListener('click', ()=>startSession(sid));
+  }
+
+  const pv = $('#today-preview');
+  if(vsid==='rest'){ pv.style.display='none'; }
+  else {
+    pv.style.display='';
+    // a day you've just switched to opens its contents; otherwise keep whatever you had open
+    const key = vday+'|'+vsid, wasOpen = key===lastPvKey ? pv.open : peek;
+    lastPvKey = key;
+    pv.innerHTML = '<summary><span>What’s in it</span><span class="chev">›</span></summary>' + outlineHTML(vsid) +
+      (peek && off>0 && hasRungs(vsid) ? '<p class="pv-note">Rungs are where you are now. They can move up after your next session.</p>' : '');
+    pv.open = wasOpen;
+  }
+
+  // up next (only on today's view)
+  const nl=$('#next-link');
+  nl.hidden = peek;
+  if(!peek){
+    const t=SESSIONS[WEEK[(dow+1)%7]];
+    nl.innerHTML='<span class="nk">Tomorrow</span><span class="nt">'+esc(t.title)+'</span><span class="chev">›</span>';
+    nl.onclick=()=>peekDay(isoOffset(1));
+  }
+
+  // week strip (Mon..Sun) — tap a day to preview it
+  const ds = weekDates(0);
+  $('#week-strip').innerHTML = WEEK.map((id,i)=>{
+    const cls = 'ws' + (SESSIONS[id].rehab?' key':'') + (doneOn(ds[i])?' done':'') + (i===dow?' today':'') + (peek && ds[i]===viewDate?' sel':'');
+    return '<button type="button" class="'+cls+'" data-day="'+ds[i]+'" aria-label="'+DAYLONG[i]+': '+esc(SESSIONS[id].title)+'"'+(i===dow?' aria-current="date"':'')+' aria-pressed="'+(ds[i]===vday)+'"><div class="c">'+DAYNAMES[i][0]+'</div><div class="sl">'+esc(SESSIONS[id].short)+'</div></button>';
+  }).join('');
+  $('#week-strip').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click', ()=>peekDay(b.dataset.day)));
+
+  $('#bench-due').hidden = !benchDue();
+  renderGateCard();
+  renderKneeCard();
+
+  // swaps
+  const swaps = $('#swap-list'); swaps.innerHTML='';
+  Object.keys(SESSIONS).filter(x=>x!==sid && x!=='rest').forEach(id=>{
+    const b=document.createElement('button');
+    b.innerHTML = esc(SESSIONS[id].title)+'<span>~'+estMins(id)+' min</span>';
+    b.addEventListener('click', ()=>startSession(id));
+    swaps.appendChild(b);
+  });
+
+  $('#rehab-tip').textContent = REHAB_TIPS[(now.getDate()+dow) % REHAB_TIPS.length];
+}
+
+function renderKneeCard(){
+  const c=$('#knee-card'); const ended=store.get('kneeEnded',null);
+  if(kneeMode){
+    const today=painLog.find(p=>p.d===todayISO()&&typeof p.knee==='number');
+    const v=today?today.knee:2, n=kneeDays(), rungName=rungDef('knee', Math.max(0,kneeMode.rung-1)).n;
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee mode · day '+n+'</div>'+
+      '<p>Squats and step-ups are swapped for <strong>easy wall sits</strong> (5 × 45s, shallow) until the knee settles. Everything else is unchanged. Keep walking, and skip deep squats, lunges, jumping and kneeling for now.</p>'+
+      '<h3>Morning check</h3><p style="margin-top:0">Do one slow half-squat. How does the knee feel?</p>'+
+      '<div class="ck-row"><div class="ck-head"><span class="cn">Knee</span><span class="cv num" id="km-v">'+v+'</span></div>'+
+      '<input type="range" min="0" max="10" step="1" value="'+v+'" id="km-r"><div class="ck-scale"><span>quiet</span><span>bad</span></div></div>'+
+      '<button class="ghost-btn" id="km-save" style="margin-top:8px">'+(today?'Update today’s score':'Log it')+'</button>'+
+      '<p class="km-note">Three scores of 2 or less in a row ends knee mode automatically, and you go back to <strong>'+esc(rungName)+'</strong> (one rung below where you were) to ease back in.'+
+      (n>=21?' <strong>It’s been 3 weeks.</strong> If it isn’t clearly easing, get it looked at by a physio.':' Swelling, locking, giving way, a hot red knee, calf pain, sharp pain or 6+/10: see your GP or a physio.')+'</p>'+
+      '<button class="link-btn" id="km-end">End knee mode now</button>';
+    const r=$('#km-r'); r.addEventListener('input', ()=>{ $('#km-v').textContent=r.value; });
+    $('#km-save').addEventListener('click', ()=>{ logKnee(+r.value); buzz(8); if(kneeMode) toast('Logged'); });
+    $('#km-end').addEventListener('click', ()=>endKneeMode(false));
+  } else if(ended && ended.d===todayISO()){
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee mode finished</div><p>'+(ended.auto?'Three calm scores in a row. ':'')+
+      'You’re back on <strong>'+esc(curDef('knee').n)+'</strong>, one rung lower than before. It moves up again after settled next mornings.</p>';
+  } else if(kneeSuggest()){
+    const p=lastPain();
+    c.hidden=false;
+    c.innerHTML='<div class="eyebrow">Knee grumbling?</div><p>You logged the knee at '+p.knee+'/10. Knee mode swaps squats and step-ups for shallow wall sits until three calm scores in a row, then eases you back in.</p>'+
+      '<div style="display:flex;gap:8px;margin-top:10px"><button class="ghost-btn" id="km-on">Turn on knee mode</button><button class="link-btn" id="km-no">Not now</button></div>';
+    $('#km-on').addEventListener('click', startKneeMode);
+    $('#km-no').addEventListener('click', ()=>{ store.set('kneeDismissed', p.d); render(); });
+  } else c.hidden=true;
+}
+
+function renderPlan(){
+  renderPlanWeekOnly();
+  $('#kit-list').innerHTML = KIT.map(k=>
+    '<label class="kit-row"><input type="checkbox" data-kit="'+k.k+'"'+(kit[k.k]?' checked':'')+' aria-label="I have '+esc(k.n)+'">'+
+    '<div><div><span class="kn">'+esc(k.n)+'</span><span class="kp">'+esc(k.p)+'</span></div>'+
+    '<div class="kw">'+esc(k.why)+'</div><div class="ku">Unlocks: '+esc(k.unlocks)+'</div></div></label>'
+  ).join('');
+  document.querySelectorAll('[data-kit]').forEach(el=>{
+    el.addEventListener('change', ()=>{ kit[el.dataset.kit]=el.checked; store.set('kit', kit); renderToday(); renderPlanWeekOnly(); });
+  });
+}
+// The week, each day expandable to show what's in its session.
+function renderPlanWeekOnly(){
+  const open = [...document.querySelectorAll('#plan-week .week-day')].map(d=>d.open);
+  const dow = dowMon0(new Date());
+  $('#plan-week').innerHTML = WEEK.map((id,i)=>{
+    const s=SESSIONS[id], cls='week-day'+(i===dow?' is-today':'');
+    const row = '<div class="d">'+DAYNAMES[i]+'</div><div class="t">'+esc(s.title)+(s.rehab?' <span class="tag hot">strength</span>':'')+'</div><div class="m num">'+(id==='rest'?'—':'~'+estMins(id)+' min')+'</div>';
+    if(id==='rest') return '<div class="'+cls+'"><div class="week-row">'+row+'<span class="chev"></span></div></div>';
+    return '<details class="'+cls+'"'+(open[i]?' open':'')+'><summary class="week-row">'+row+'<span class="chev">›</span></summary><div class="day-body">'+outlineHTML(id)+'</div></details>';
+  }).join('');
+}
+
+function ladderHTML(id){
+  const L = LADDERS[id], cur = lvl(id);
+  const dose = v => v.mode==='time' ? (v.sets+' × '+v.secs+'s'+(v.perSide?' / side':'')) : (v.sets+' × '+v.reps);
+  let h = '<details><summary><span>'+esc(L.name)+'<span class="sub">'+esc(L.area)+' · now: '+esc(curDef(id).n)+'</span></span><span class="chev">›</span></summary>';
+  h += '<p style="font-size:.88rem;color:var(--ink2);margin:8px 0 0">'+esc(L.why)+'</p>';
+  if(id==='knee' && !kneeMode){
+    const need=passesNeeded(cur);
+    h += '<p class="stage-note">Moves up after you rate it “Easy” and the next '+need+' mornings in a row are back to normal. So far: <strong>'+Math.min(kneeGate.passes,need)+' of '+need+'</strong>.</p>';
+  }
+  if(id==='run' && lvl('knee') < KNEE_SPRING)
+    h += '<p class="stage-note">Hops, skipping and jogging are springy work that loads the knee hard, so they wait until the knee ladder reaches <strong>'+esc(LADDERS.knee.levels[KNEE_SPRING].n)+'</strong> (rung '+(KNEE_SPRING+1)+').</p>';
+  h += '<div class="ladder">';
+  let stage=0;
+  L.levels.forEach((v,i)=>{
+    if(v.stage && v.stage!==stage){ stage=v.stage; h += '<div class="stage-h">Stage '+stage+' · '+esc(KNEE_STAGES[stage].t)+' <span>· '+esc(KNEE_STAGES[stage].d)+'</span></div>'; }
+    const r = rungDef(id, i), swapped = r!==v;
+    const kitName = v.needs ? KIT.find(k=>k.k===v.needs).n : '';
+    h += '<div class="rung'+(i===cur?' cur':'')+'"><div class="n num">'+(i+1)+'</div><div class="info"><div class="rn">'+esc(r.n)+' <span style="color:var(--ink3);font-weight:500">· '+esc(dose(r))+'</span></div><div class="rd">'+esc(r.d)+
+      (swapped ? '<br><em>With a '+esc(kitName.toLowerCase())+': '+esc(v.n)+'</em>' : '')+'</div></div><button class="play" data-demo="'+esc(r.n)+'" aria-label="Show demo of '+esc(r.n)+'"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg></button></div>';
+  });
+  if(id==='knee') h += '<div class="stage-h">Stage 4 · Springy work <span>· hops, skipping and walk-jog, in the Back to running ladder. They unlock at rung '+(KNEE_SPRING+1)+'.</span></div>';
+  h += '</div><div class="lvl-ctl"><button data-lvl="'+id+'" data-dir="-1">− Easier</button><button data-lvl="'+id+'" data-dir="1">Harder +</button></div></details>';
+  return h;
+}
+
+const LADDER_ORDER = ['knee','hip','glute','hinge','calf','run'];
+function renderLibrary(){
+  const open = [...document.querySelectorAll('#lib-ladders details')].map(d=>d.open);
+  $('#lib-ladders').innerHTML = LADDER_ORDER.map(ladderHTML).join('');
+  $('#km-lib').innerHTML = kneeMode
+    ? '<p><strong>Knee mode is on</strong> (day '+kneeDays()+'). The knee ladder is paused on rung '+(kneeMode.rung+1)+'.</p><button class="ghost-btn" id="km-lib-btn">End knee mode</button>'
+    : '<p><strong>Knee flaring?</strong> Knee mode swaps squats and step-ups for shallow wall sits until it settles.</p><button class="ghost-btn" id="km-lib-btn">Turn on knee mode</button>';
+  $('#km-lib-btn').addEventListener('click', ()=> kneeMode ? endKneeMode(false) : startKneeMode());
+  document.querySelectorAll('#lib-ladders details').forEach((d,i)=>{ if(open[i]) d.open=true; });
+  document.querySelectorAll('[data-lvl]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id=b.dataset.lvl, dir=+b.dataset.dir;
+      levels[id] = Math.max(0, Math.min(LADDERS[id].levels.length-1, lvl(id)+dir));
+      if(id==='knee'){ kneeGate.passes=0; saveGate(); }
+      store.set('levels', levels); renderLibrary();
+    });
+  });
+  const groups = {};
+  Object.values(DRILLS).forEach(d=>{ (groups[d.area]=groups[d.area]||[]).push(d); });
+  $('#lib-fixed').innerHTML = Object.entries(groups).map(([area,ds])=>
+    '<details><summary><span>'+esc(area)+'<span class="sub">'+ds.length+' drills</span></span><span class="chev">›</span></summary>'+
+    ds.map(d=>'<div style="margin:10px 0"><strong style="font-size:.92rem">'+esc(d.n)+'</strong>'+(d.needs?' <span class="tag">'+esc(KIT.find(k=>k.k===d.needs).n)+'</span>':'')+' <button class="demo-btn" data-demo="'+esc(d.n)+'"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Demo</button><div style="font-size:.85rem;color:var(--ink2)">'+esc(d.d)+'</div><ul class="cue-list">'+d.cues.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul></div>').join('')+
+    '</details>'
+  ).join('');
+}
+
+function renderProgress(){
+  const bars=$('#prog-bars'), lbls=$('#prog-bars-l'); bars.innerHTML=''; lbls.innerHTML='';
+  const counts=[]; for(let w=7;w>=0;w--) counts.push(weekCount(w));
+  const max=Math.max(6,...counts);
+  counts.forEach((c,i)=>{
+    const b=document.createElement('div'); b.className='b'+(c>0?' f':'');
+    b.style.height=Math.max(4,(c/max)*100)+'%'; b.title=c+' sessions'; bars.appendChild(b);
+    const l=document.createElement('span'); l.textContent = i===7?'now':(7-i)+'w'; lbls.appendChild(l);
+  });
+  const hist=$('#hist');
+  if(!history.length){ hist.innerHTML='<p style="color:var(--ink3);font-size:.9rem">Nothing yet. Your first session will land here.</p>'; }
+  else {
+    hist.innerHTML = history.slice(-30).reverse().map(h=>
+      '<div class="hist-row"><div class="hd num">'+esc(h.d.slice(5))+'</div><div class="ht">'+esc(h.title)+'</div><div class="hm num">'+(h.mins?h.mins+' min':'—')+'</div></div>'
+    ).join('');
+  }
+  renderBench();
+}
+
+/* ---- benchmarks ---- */
+function renderBench(){
+  const t=lastTest();
+  if(!t){
+    $('#bench-intro').textContent = 'Every 2 weeks, five minutes. The first one sets your baseline.';
+    $('#bench-list').innerHTML = '';
+    return;
+  }
+  const next = isoOffset(14 - daysBetween(t.d, todayISO()));
+  $('#bench-intro').innerHTML = 'Last done '+esc(fmtDay(t.d))+'. '+(benchDue()?'<strong>Due now.</strong>':'Next due '+esc(fmtDay(next))+'.');
+  $('#bench-list').innerHTML = TESTS.map(T=>{
+    const pts = tests.filter(x=>typeof x[T.k]==='number').map(x=>({d:x.d, v:x[T.k]}));
+    if(!pts.length) return '';
+    const cur = pts[pts.length-1].v, f = pts[0].v, diff = cur-f;
+    let dtxt = pts.length>1 ? ((diff>0?'+':'')+diff+' since '+fmtDay(pts[0].d)) : 'baseline';
+    const cls = pts.length>1 && diff!==0 ? ((diff*T.better>0)?'better':'worse') : '';
+    let extra='';
+    if(T.k==='stepDown' && typeof t.drift==='number') extra=' · knee drifts in: '+DRIFT[t.drift].toLowerCase();
+    return '<div class="bench-row"><div class="bl">'+esc(T.label)+'</div><div class="bv num">'+cur+'<small> '+esc(T.unit)+'</small></div>'+
+      '<div class="bd '+cls+'">'+esc(dtxt+extra)+'</div>'+sparkline(pts, T.max, 340)+'</div>';
+  }).join('');
+}
+
+let metro=null;
+function stopMetro(){ if(metro){ clearInterval(metro); metro=null; } const m=document.getElementById('metro-btn'); if(m){ m.classList.remove('on'); m.textContent='▶ Metronome'; } }
+function openBench(){
+  const prev = lastTest() || {};
+  const stepper = (k,label,v) => '<div><label for="t-'+k+'">'+label+'</label><div class="stepper"><button type="button" data-step="'+k+'" data-d="-1" aria-label="minus">−</button><input type="number" inputmode="numeric" min="0" max="99" id="t-'+k+'" value="'+v+'"><button type="button" data-step="'+k+'" data-d="1" aria-label="plus">+</button></div></div>';
+  const slider = (k,label,v) => '<div class="ck-row" style="border:none;padding:4px 0 0"><div class="ck-head"><span class="cn">'+label+'</span><span class="cv num" id="tv-'+k+'">'+v+'</span></div><input type="range" min="0" max="10" step="1" value="'+v+'" id="t-'+k+'"><div class="ck-scale"><span>no pain</span><span>bad</span></div></div>';
+  openModal(
+    '<h2>Benchmarks</h2><p>Same conditions each time: barefoot, before a session.</p>'+
+    '<div class="test-block"><h3>1 · Down a flight of stairs</h3>'+
+      '<p>Walk down one flight at your normal pace, hand on the rail. Rate the worse knee.</p>'+
+      slider('stairsDown','Knee pain', prev.stairsDown??4)+'</div>'+
+    '<div class="test-block"><h3>2 · 10 slow step-downs, worse leg</h3>'+
+      '<p>From the bottom stair, 3s down, tap the heel, back up. Prop your phone up and film it from the front to check the knee.</p>'+
+      slider('stepDown','Knee pain', prev.stepDown??3)+
+      '<div class="fb-row" style="border:none"><div class="fn">Knee drifts inward?</div><div class="fb-btns" id="drift-btns">'+
+        DRIFT.map((x,i)=>'<button type="button" data-drift="'+i+'"'+((prev.drift??1)===i?' class="sel-keep"':'')+'>'+x+'</button>').join('')+'</div></div></div>'+
+    '<div class="test-block"><h3>3 · Sit to stand in 30 seconds</h3>'+
+      '<p>Normal chair, arms crossed on your chest. Stand fully up and sit fully down as many times as you can in 30s.</p>'+
+      '<div class="test-pair">'+stepper('sts','Reps',prev.sts??12)+'</div></div>'+
+    '<div class="test-block"><h3>4 · Single-leg calf raises</h3>'+
+      '<p>Flat floor, fingertips on a wall. Up on one beat, down on the next. Full height every rep. Stop when you can’t reach full height or keep the beat.</p>'+
+      '<button type="button" class="metro" id="metro-btn">▶ Metronome</button>'+
+      '<div class="test-pair">'+stepper('calfL','Left',prev.calfL??12)+stepper('calfR','Right',prev.calfR??12)+'</div></div>'+
+    '<button class="big-btn" id="bench-save" style="margin-top:14px">Save benchmarks</button>'
+  );
+  let drift = prev.drift ?? 1;
+  document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click', ()=>{
+    const el=document.getElementById('t-'+b.dataset.step); el.value=Math.max(0, Math.min(99, (+el.value||0)+(+b.dataset.d)));
+  }));
+  ['stairsDown','stepDown'].forEach(k=>{ const el=document.getElementById('t-'+k); el.addEventListener('input', ()=>{ document.getElementById('tv-'+k).textContent=el.value; }); });
+  document.querySelectorAll('[data-drift]').forEach(b=>b.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-drift]').forEach(x=>x.className=''); b.className='sel-keep'; drift=+b.dataset.drift;
+  }));
+  document.getElementById('metro-btn').addEventListener('click', e=>{
+    const m=e.currentTarget;
+    if(metro){ stopMetro(); return; }
+    let up=true; beep(880,.05);
+    metro=setInterval(()=>{ up=!up; beep(up?880:560,.05); },1000);
+    m.classList.add('on'); m.textContent='■ Stop metronome';
+  });
+  document.getElementById('bench-save').addEventListener('click', ()=>{
+    const e={d:todayISO()};
+    ['sts','calfL','calfR'].forEach(k=>{ e[k]=Math.max(0, Math.round(+document.getElementById('t-'+k).value||0)); });
+    ['stairsDown','stepDown'].forEach(k=>{ e[k]=+document.getElementById('t-'+k).value; });
+    e.drift=drift;
+    tests = tests.filter(x=>x.d!==e.d); tests.push(e); tests.sort((a,b)=>a.d<b.d?-1:1);
+    store.set('tests', tests); closeModal(); render();
+  });
+}
+$('#btn-bench').addEventListener('click', openBench);
+$('#btn-bench-today').addEventListener('click', openBench);
+
+/* ---- body check-in + trends ---- */
+function lastPain(){ return painLog.length ? painLog[painLog.length-1] : null; }
+
+function checkinHTML(){
+  const prev = lastPain();
+  return '<h3 style="margin-top:14px">Body check-in</h3>'+
+    '<p style="margin:2px 0 4px">How is each area <em>today</em>? 0 = didn’t notice it, 10 = really bad.</p>'+
+    AREAS.map(([k,label])=>{
+      const v = prev && typeof prev[k]==='number' ? prev[k] : 2;
+      return '<div class="ck-row"><div class="ck-head"><span class="cn">'+label+'</span><span class="cv num" id="ckv-'+k+'">'+v+'</span></div>'+
+        '<input type="range" min="0" max="10" step="1" value="'+v+'" id="ck-'+k+'">'+
+        '<div class="ck-scale"><span>quiet</span><span>bad</span></div></div>';
+    }).join('');
+}
+function wireCheckin(){
+  AREAS.forEach(([k])=>{
+    const el=document.getElementById('ck-'+k);
+    if(el) el.addEventListener('input', ()=>{ document.getElementById('ckv-'+k).textContent=el.value; });
+  });
+}
+function saveCheckin(){
+  const entry={d:todayISO()};
+  let any=false;
+  AREAS.forEach(([k])=>{ const el=document.getElementById('ck-'+k); if(el){ entry[k]=+el.value; any=true; } });
+  if(!any) return;
+  painLog = painLog.filter(p=>p.d!==entry.d); // one entry per day, last write wins
+  painLog.push(entry);
+  painLog.sort((a,b)=>a.d<b.d?-1:1);
+  store.set('pain', painLog);
+  checkKneeExit();
+}
+
+function sparkline(points, max, W){ // points: [{d, v}] on a fixed 0–max scale
+  max = max || 10; W = W || 140;
+  const H=44, PAD=4;
+  const y=v=>H-PAD-(Math.min(v,max)/max)*(H-2*PAD);
+  if(points.length<2){
+    return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="'+(H-1)+'" x2="'+W+'" y2="'+(H-1)+'" stroke="var(--line)" stroke-width="1"/>'+
+      (points.length===1?'<circle cx="'+(W-PAD)+'" cy="'+y(points[0].v)+'" r="4" fill="var(--rest)"/>':'')+'</svg>';
+  }
+  const t0=new Date(points[0].d).getTime(), t1=new Date(points[points.length-1].d).getTime();
+  const x=d=>{ const t=new Date(d).getTime(); return PAD+(t1===t0?1:(t-t0)/(t1-t0))*(W-2*PAD); };
+  const pts=points.map(p=>x(p.d).toFixed(1)+','+y(p.v).toFixed(1)).join(' ');
+  const last=points[points.length-1];
+  return '<svg viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+    '<line x1="0" y1="'+y(0)+'" x2="'+W+'" y2="'+y(0)+'" stroke="var(--line)" stroke-width="1"/>'+
+    '<line x1="0" y1="'+y(max/2)+'" x2="'+W+'" y2="'+y(max/2)+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="var(--rest)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+x(last.d).toFixed(1)+'" cy="'+y(last.v).toFixed(1)+'" r="4" fill="var(--rest)"/></svg>';
+}
+
+function renderTrends(){
+  const g=$('#trend-grid');
+  if(!painLog.length){
+    g.innerHTML='<p style="grid-column:1/-1;color:var(--ink3);font-size:.88rem;margin:0">No check-ins yet. You’ll be asked after each workout, or tap below.</p>';
+    return;
+  }
+  const cutoff=isoOffset(-56);
+  g.innerHTML = AREAS.map(([k,label])=>{
+    const pts=painLog.filter(p=>p.d>=cutoff && typeof p[k]==='number').map(p=>({d:p.d, v:p[k]}));
+    const cur=pts.length?pts[pts.length-1].v:null;
+    let delta='';
+    if(pts.length>=4){
+      const half=Math.floor(pts.length/2);
+      const avg=a=>a.reduce((s,p)=>s+p.v,0)/a.length;
+      const diff=avg(pts.slice(half))-avg(pts.slice(0,half));
+      delta = diff<-0.5?'<div class="delta down">improving</div>':diff>0.5?'<div class="delta up">worsening</div>':'<div class="delta flat">steady</div>';
+    }
+    return '<div class="trend"><div class="tl">'+label+'</div><div class="tv num">'+(cur===null?'—':cur+'<small> /10</small>')+'</div>'+sparkline(pts,10)+delta+'</div>';
+  }).join('');
+}
+
+function openCheckin(){
+  openModal('<h2>Body check-in</h2>'+checkinHTML()+'<button class="big-btn" id="ck-save" style="margin-top:14px">Save</button>');
+  wireCheckin();
+  document.getElementById('ck-save').addEventListener('click', ()=>{ saveCheckin(); closeModal(); render(); });
+}
+$('#btn-checkin').addEventListener('click', openCheckin);
+
+const ytLink = name => 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' exercise proper form');
+
+function render(){ renderToday(); renderPlan(); renderLibrary(); renderProgress(); renderTrends(); }
+
+/* backup: file download/upload, clipboard fallback where downloads are blocked */
+function applyBackup(d){
+  if(!d || !d.levels || !d.history){ alert('That doesn’t look like a Stepwise backup.'); return; }
+  levels=d.levels; history=d.history; painLog=d.pain||[];
+  if(d.kit) kit=d.kit;
+  if(d.tests) tests=d.tests;
+  if(d.blockStart) blockStart=d.blockStart;
+  if('kneeMode' in d){ kneeMode=d.kneeMode; store.set('kneeMode', kneeMode); }
+  if(d.kneeGate){ kneeGate=d.kneeGate; saveGate(); }
+  store.set('levels',levels); store.set('history',history); store.set('pain',painLog);
+  store.set('kit',kit); store.set('tests',tests); if(blockStart) store.set('blockStart',blockStart);
+  // An older backup restores older rungs: remap them from its own version.
+  if((d.progv||1) < PROGRAM_VERSION){ store.set('progv', d.progv||1); migrate(); }
+  render(); alert('Restored.');
+}
+$('#btn-export').addEventListener('click', async ()=>{
+  const data = JSON.stringify({app:'stepwise', progv:PROGRAM_VERSION, exported:todayISO(), levels, history, pain:painLog, kit, tests, blockStart, kneeMode, kneeGate});
+  const fname = 'stepwise-backup-'+todayISO()+'.json';
+  // Inside the claude.ai viewer, plain <a download> is inert — go through the
+  // downloads capability there; use a normal download everywhere else.
+  if(window.claude && typeof window.claude.use==='function'){
+    try{
+      const dl = await window.claude.use('downloads');
+      if(dl){
+        try{ await dl.save({filename:fname, data}); return; }
+        catch(err){ if(err && err.code==='declined') return; /* else fall through to clipboard */ }
+      }
+    }catch(e){}
+    try{ await navigator.clipboard.writeText(data); alert('Backup copied to clipboard. Paste it somewhere safe.'); }
+    catch(e){ prompt('Copy this:', data); }
+    return;
+  }
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    a.download=fname;
+    document.body.appendChild(a); a.click(); a.remove();
+  }catch(e){
+    try{ await navigator.clipboard.writeText(data); alert('Backup copied to clipboard. Paste it somewhere safe.'); }
+    catch(e2){ prompt('Copy this:', data); }
+  }
+});
+$('#btn-import').addEventListener('click', ()=>{
+  try{
+    const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+    inp.addEventListener('change', ()=>{
+      const f=inp.files && inp.files[0]; if(!f) return;
+      f.text().then(t=>{ try{ applyBackup(JSON.parse(t)); }catch(e){ alert('Couldn’t read that file.'); } });
+    });
+    inp.click();
+  }catch(e){
+    const t=prompt('Paste your backup:');
+    if(t){ try{ applyBackup(JSON.parse(t)); }catch(err){ alert('Couldn’t read that backup.'); } }
+  }
+});
+
+function logSession(id, title, mins){
+  history.push({d: todayISO(), id, title, mins});
+  store.set('history', history);
+}
+
+/* =====================================================================
+   Player
+   ===================================================================== */
+let steps=[], stepIx=0, sessionId=null, sessionStart=0, usedSlots=[], setsDone=0;
+let phase='reps', paused=false, remain=0, total=0, endAt=0, lastWhole=-1, clockTimer=null, elapsedTimer=null;
+let wakeLock=null, audioCtx=null, figStage=null, cueIx=0, cueTimer=null, cueItems=[], segs=[];
+let soundMode = store.get('sound','voice'); // voice | beep | mute
+
+function beep(freq, dur, when){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.frequency.value=freq; o.type='sine'; o.connect(g); g.connect(audioCtx.destination);
+    const t=audioCtx.currentTime+(when||0);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t); o.stop(t+dur+0.05);
+  }catch(e){}
+}
+const pbeep=(f,d,w)=>{ if(soundMode!=='mute') beep(f,d,w); };
+function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+function say(text){
+  if(soundMode!=='voice' || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.rate=1.03; u.lang='en-GB'; speechSynthesis.speak(u); }catch(e){}
+}
+const spokenReps = r => String(r).replace(/\s*\/\s*side/,' per side').replace(/×/g,'by').replace(/(\d+)s\b/g,'$1 second');
+
+const ICON={
+  check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg>',
+  skip:'<svg viewBox="0 0 24 24"><path d="M6 6l6 6-6 6M13 6l6 6-6 6"/></svg>',
+  voice:'<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.2a4 4 0 010 5.6M18 6.8a7.5 7.5 0 010 10.4"/></svg>',
+  beep:'<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.2a4 4 0 010 5.6"/></svg>',
+  mute:'<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
+};
+function renderSound(){ $('#p-sound').innerHTML=ICON[soundMode]; $('#p-sound').setAttribute('aria-label','Sound: '+soundMode); }
+$('#p-sound').addEventListener('click', ()=>{
+  soundMode = soundMode==='voice'?'beep':soundMode==='beep'?'mute':'voice';
+  store.set('sound', soundMode); renderSound();
+  toast(soundMode==='voice'?'Voice + beeps':soundMode==='beep'?'Beeps only':'Muted');
+  if(soundMode!=='voice') try{ speechSynthesis.cancel(); }catch(e){}
+});
+
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),1600);
+}
+
+function stageAspect(el){ const r=el.getBoundingClientRect(); return r.width>20&&r.height>20 ? r.width/r.height : 1.6; }
+function moveFor(name){ return (window.MOVES && MOVES[name]) || null; }
+
+async function startSession(sid){
+  const built=buildSteps(sid);
+  if(!built.steps.length) return;
+  sessionId=sid; steps=built.steps; usedSlots=built.slots; stepIx=0; paused=false; sessionStart=Date.now(); setsDone=0;
+  if(heroStage) heroStage.pause();
+  $('#p-sess').textContent = SESSIONS[sid].title;
+  buildSegs();
+  renderSound();
+  $('#player').classList.add('on');
+  document.body.style.overflow='hidden';
+  try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  beep(660,.05,0); // unlock audio on the user gesture
+  if(!figStage && window.Figure){ figStage = Figure.Stage($('#p-fig'), {aspect:1.6}); }
+  clearInterval(elapsedTimer);
+  elapsedTimer=setInterval(()=>{ const s=Math.floor((Date.now()-sessionStart)/1000); $('#p-elapsed').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },1000);
+  $('#p-elapsed').textContent='0:00';
+  requestAnimationFrame(()=>showStep({dir:'f', first:true}));
+  if(!store.get('soundTip',false)){ store.set('soundTip',true); setTimeout(()=>toast('Voice cues on. Tap the speaker to change'),900); }
+}
+document.addEventListener('visibilitychange', async ()=>{
+  if(document.visibilityState==='visible' && $('#player').classList.contains('on')){
+    try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  }
+});
+
+function buildSegs(){
+  // group steps into sections; with fewer than 3 sections, one segment per exercise
+  const bySec=[]; let cur=null;
+  steps.forEach((s,i)=>{
+    const key = s.kind==='work' ? s.sec : (cur?cur.key:'');
+    if(!cur || key!==cur.key){ cur={key, start:i, end:i}; bySec.push(cur); } else cur.end=i;
+  });
+  if(bySec.length>=3) segs=bySec;
+  else { segs=[]; let c=null; steps.forEach((s,i)=>{ if(!c || (s.kind==='work' && s.name!==steps[c.start].name)){ c={start:i,end:i}; segs.push(c); } else c.end=i; }); }
+  $('#p-segs').innerHTML = segs.map(g=>'<i style="flex:'+(g.end-g.start+1)+'"><b></b></i>').join('');
+}
+function paintSegs(){
+  const els=$('#p-segs').children;
+  segs.forEach((g,k)=>{
+    const f = stepIx>g.end ? 1 : stepIx<g.start ? 0 : (stepIx-g.start+0.5)/(g.end-g.start+1);
+    els[k].firstChild.style.width=(f*100).toFixed(1)+'%';
+    els[k].classList.toggle('done', stepIx>g.end);
+  });
+}
+
+function repParts(r){
+  const s=String(r);
+  const m=s.match(/^(\d+)\s*(.*)$/);
+  if(!m) return {v:'', u:s};
+  let u=m[2].replace(/^\/\s*side/,'per side').replace(/^,\s*/,'').trim();
+  return {v:m[1], u:u||'reps'};
+}
+
+function setPrimary(kind){
+  const b=$('#p-primary');
+  const map={
+    reps:[ICON.check, (steps[stepIx]&&(steps[stepIx].sets>1||steps[stepIx].side))?'Set done':'Done', ''],
+    ready:[ICON.play,'Start now',''],
+    run:[ICON.pause,'Pause','soft'],
+    paused:[ICON.play,'Resume',''],
+    rest:[ICON.skip,'Skip rest','rest'],
+  }[kind];
+  b.innerHTML=map[0]+'<span>'+map[1]+'</span>';
+  b.className='p-go'+(map[2]?' '+map[2]:'');
+}
+
+function showStep(o){
+  o=o||{};
+  stopClock();
+  const st=steps[stepIx];
+  if(!st){ finishSession(false); return; }
+  const P=$('#player');
+  const isRest = st.kind==='rest';
+  const nextWork = steps.slice(stepIx+1).find(x=>x.kind==='work');
+  const shown = isRest ? nextWork : st;       // what the stage + name show
+  paused=false; P.classList.remove('is-paused');
+  // swap animation
+  const sw=$('#p-swap'); sw.classList.remove('in-f','in-b'); void sw.offsetWidth; sw.classList.add(o.dir==='b'?'in-b':'in-f');
+
+  // header
+  const works=steps.filter(x=>x.kind==='work'), wIx=steps.slice(0,stepIx+1).filter(x=>x.kind==='work').length;
+  $('#p-count').textContent = isRest ? (wIx+' / '+works.length) : (wIx+' / '+works.length);
+  paintSegs();
+
+  // figure
+  const mv = shown ? moveFor(shown.name) : null;
+  if(figStage){
+    figStage.resize(stageAspect($('#p-fig')));
+    figStage.set(mv, {flip: !!(shown && shown.side==='Left')});
+    figStage.play();
+  }
+  $('#p-chip').className='p-chip'+(isRest?' next':(st.side?' side':''));
+  $('#p-chip').textContent = isRest ? 'Up next' : (st.side ? st.side+' side' : '');
+
+  // words
+  $('#p-name').textContent = shown ? shown.name : 'Last stretch';
+  const dots=$('#p-dots');
+  const ref = shown;
+  if(ref && ref.sets>1){ dots.innerHTML=Array.from({length:ref.sets},(_,i)=>'<i class="'+(i+1<ref.set?'done':i+1===ref.set?'cur':'')+'"></i>').join(''); }
+  else dots.innerHTML='';
+  $('#p-detail').textContent = ref ? ((ref.sets>1?'Set '+ref.set+' of '+ref.sets:'')+(ref.side?((ref.sets>1?' · ':'')+ref.side):'')) : '';
+
+  // cues (during rest: the upcoming exercise)
+  cueItems = ref ? [ref.sub].concat(ref.cues||[]).filter(Boolean) : ['Shake it out.'];
+  cueIx=0; paintCue(false); restartCueTimer();
+
+  // under line
+  const after = isRest ? steps.slice(stepIx+1).filter(x=>x.kind==='work')[1] : nextWork;
+  const sameEx = after && ref && after.name===ref.name;
+  $('#p-next').innerHTML = after ? 'Then: <strong>'+(sameEx ? (after.side && after.side!==ref.side ? after.side+' side' : 'set '+after.set+' of '+after.sets) : esc(after.name))+'</strong>' : (isRest?'':'Last one. Finish strong');
+  const vid=$('#p-video');
+  if(ref){ vid.href=ytLink(ref.name); vid.textContent='Watch form ↗'; } else { vid.textContent=''; vid.removeAttribute('href'); }
+
+  $('#p-prev').disabled = stepIx===0;
+
+  // phase
+  P.classList.toggle('is-rest', isRest);
+  P.classList.remove('is-ready');
+  if(isRest){
+    $('#p-phase').textContent='Rest';
+    phase='rest'; setPrimary('rest');
+    startClock(st.secs, 'rest');
+    say('Rest. Next, '+nextWork.name+(nextWork.side?', '+nextWork.side+' side':''));
+  } else {
+    $('#p-phase').textContent = st.sec || 'Flow';
+    if(st.mode==='time'){
+      const prevRest = stepIx>0 && steps[stepIx-1].kind==='rest' && o.natural;
+      if(prevRest){ phase='run'; setPrimary('run'); startClock(st.secs,'run'); pbeep(880,.16); }
+      else {
+        phase='ready'; P.classList.add('is-ready'); $('#p-phase').textContent='Get ready';
+        setPrimary('ready'); startClock(5,'ready');
+        say(st.name+(st.side?', '+st.side+' side':'')+'. '+st.secs+' seconds');
+      }
+    } else {
+      phase='reps'; setPrimary('reps');
+      const rp=repParts(st.reps);
+      $('#p-clock').className='p-clock reps';
+      $('#p-clock').innerHTML='<div class="p-num"><span class="v">'+esc(rp.v||'–')+'</span><span class="u">'+esc(rp.u)+'</span></div>';
+      const afterRest = stepIx>0 && steps[stepIx-1].kind==='rest' && o.natural;
+      say(afterRest ? spokenReps(st.reps) : st.name+'. '+spokenReps(st.reps)+(st.side?'. '+st.side+' side':''));
+    }
+  }
+}
+
+function paintCue(anim){
+  const t=$('#p-cue-t'); t.textContent=cueItems[cueIx]||'';
+  if(anim){ t.classList.remove('fade'); void t.offsetWidth; t.classList.add('fade'); }
+  $('#p-cue-n').innerHTML = cueItems.length>1 ? cueItems.map((_,i)=>'<i class="'+(i===cueIx?'on':'')+'"></i>').join('') : '';
+}
+function restartCueTimer(){ clearInterval(cueTimer); cueTimer=setInterval(()=>{ if(paused||cueItems.length<2) return; cueIx=(cueIx+1)%cueItems.length; paintCue(true); }, 6500); }
+$('#p-cue').addEventListener('click', ()=>{ if(cueItems.length<2) return; cueIx=(cueIx+1)%cueItems.length; paintCue(true); restartCueTimer(); });
+
+/* ---- countdown clock (ready → run, rest) ---- */
+const RC=2*Math.PI*52;
+function startClock(secs, kind){
+  total=secs; remain=secs; endAt=Date.now()+secs*1000; lastWhole=Math.ceil(secs);
+  const c=$('#p-clock'); c.className='p-clock';
+  c.innerHTML='<svg viewBox="0 0 118 118"><circle class="track" cx="59" cy="59" r="52"/><circle class="arc" id="p-arc" cx="59" cy="59" r="52" stroke-dasharray="'+RC.toFixed(1)+'" stroke-dashoffset="0"/></svg>'+
+    '<div class="p-num"><span class="v" id="p-v">'+Math.ceil(secs)+'</span><span class="u">'+(kind==='ready'?'get ready':kind==='rest'?'rest':'sec')+'</span></div>'+
+    (kind==='rest'?'<button class="p-plus" id="p-plus" type="button">+15s</button>':'');
+  if(kind==='rest') $('#p-plus').addEventListener('click', e=>{ e.stopPropagation(); addTime(15); });
+  paintClock();
+  clockTimer=setInterval(tickClock, 100);
+}
+function stopClock(){ clearInterval(clockTimer); clockTimer=null; }
+function addTime(s){ total+=s; remain+=s; endAt+=s*1000; lastWhole=Math.ceil(remain); paintClock(); toast('+'+s+'s'); buzz(8); }
+function paintClock(){
+  const arc=document.getElementById('p-arc'), v=document.getElementById('p-v');
+  if(!arc) return;
+  arc.style.strokeDashoffset=(RC*(1-Math.max(0,remain)/total)).toFixed(1);
+  const w=Math.max(0,Math.ceil(remain-0.001));
+  if(v.textContent!==String(w)){ v.textContent=w; const c=$('#p-clock'); c.classList.remove('tick'); void c.offsetWidth; c.classList.add('tick'); }
+  $('#p-clock').classList.toggle('final', w<=3 && w>0 && phase!=='ready');
+}
+function tickClock(){
+  if(paused) return;
+  remain=(endAt-Date.now())/1000;
+  const w=Math.ceil(remain);
+  if(w<lastWhole){ lastWhole=w; if(w<=3 && w>0){ pbeep(phase==='ready'?600:520,.08); if(phase!=='ready') buzz(15); } }
+  paintClock();
+  if(remain<=0){
+    stopClock();
+    if(phase==='ready'){
+      phase='run'; $('#player').classList.remove('is-ready'); $('#p-phase').textContent=steps[stepIx].sec||'Flow';
+      setPrimary('run'); pbeep(880,.18); buzz(60);
+      startClock(steps[stepIx].secs,'run');
+    } else {
+      if(phase==='run') setsDone++;
+      pbeep(880,.18); buzz(120);
+      stepIx++; showStep({dir:'f', natural:true});
+    }
+  }
+}
+function setPaused(p){
+  if(phase!=='run' && phase!=='rest' && phase!=='ready') return;
+  paused=p;
+  if(p){ remain=(endAt-Date.now())/1000; if(figStage) figStage.pause(); }
+  else { endAt=Date.now()+remain*1000; if(figStage) figStage.play(); }
+  $('#player').classList.toggle('is-paused', p);
+  if(phase==='run') setPrimary(p?'paused':'run');
+}
+
+function ripple(btn, e){
+  const r=btn.getBoundingClientRect(), s=Math.max(r.width,r.height)*1.2;
+  const i=document.createElement('i'); i.className='rip';
+  const x=(e&&e.clientX?e.clientX:r.left+r.width/2)-r.left-s/2, y=(e&&e.clientY?e.clientY:r.top+r.height/2)-r.top-s/2;
+  i.style.cssText='width:'+s+'px;height:'+s+'px;left:'+x+'px;top:'+y+'px';
+  btn.appendChild(i); setTimeout(()=>i.remove(),520);
+}
+
+$('#p-primary').addEventListener('click', e=>{
+  const b=e.currentTarget; ripple(b,e);
+  if(phase==='reps'){ setsDone++; pbeep(880,.1); buzz(40); stepIx++; showStep({dir:'f', natural:true}); }
+  else if(phase==='ready'){ remain=0; endAt=Date.now(); tickClock(); }
+  else if(phase==='run'){ setPaused(!paused); buzz(10); }
+  else if(phase==='rest'){ buzz(20); stepIx++; showStep({dir:'f', natural:false}); }
+  const nb=$('#p-primary'); nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop');
+});
+$('#p-clock').addEventListener('click', ()=>{ if(phase==='run'||phase==='rest'){ setPaused(!paused); buzz(10); } });
+$('#p-skip').addEventListener('click', ()=>{ buzz(8); stepIx++; while(steps[stepIx] && steps[stepIx].kind==='rest') stepIx++; showStep({dir:'f'}); });
+$('#p-prev').addEventListener('click', ()=>{ if(stepIx===0) return; buzz(8); stepIx=Math.max(0,stepIx-1); while(stepIx>0 && steps[stepIx].kind==='rest') stepIx--; showStep({dir:'b'}); });
+$('#p-quit').addEventListener('click', ()=>{
+  const wasPaused=paused; if(!paused) setPaused(true);
+  const works=steps.filter(x=>x.kind==='work').length, done=steps.slice(0,stepIx).filter(x=>x.kind==='work').length;
+  openModal('<h2>End this session?</h2><p>You’re '+done+' of '+works+' sets in. Stopping early is fine, especially if something flared up. Logging it still counts toward your week.</p>'+
+    '<div class="end-opts"><button class="big-btn" id="end-keep">Keep going</button>'+
+    '<button class="ghost-btn" id="end-log">Finish and log it</button>'+
+    '<button class="ghost-btn" id="end-drop" style="color:var(--alert)">Discard session</button></div>',
+    ()=>{ if(!wasPaused && $('#player').classList.contains('on')) setPaused(false); });
+  $('#end-keep').addEventListener('click', ()=>closeModal());
+  $('#end-log').addEventListener('click', ()=>{ modalCleanup=null; closeModal(true); finishSession(true); });
+  $('#end-drop').addEventListener('click', ()=>{ modalCleanup=null; closeModal(true); closePlayer(); });
+});
+
+function closePlayer(){
+  stopClock(); clearInterval(cueTimer); clearInterval(elapsedTimer);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(figStage) figStage.pause();
+  $('#player').classList.remove('on','is-rest','is-paused','is-ready');
+  document.body.style.overflow='';
+  try{ if(wakeLock){wakeLock.release(); wakeLock=null;} }catch(e){}
+  render();
+}
+
+function burst(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const b=document.createElement('div'); b.className='burst';
+  const cols=['var(--accent)','var(--good)','var(--rest)','var(--ink)'];
+  for(let i=0;i<34;i++){
+    const a=Math.random()*Math.PI*2, d=90+Math.random()*150;
+    const p=document.createElement('i');
+    p.style.cssText='background:'+cols[i%4]+';--x:'+(Math.cos(a)*d).toFixed(0)+'px;--y:'+(Math.sin(a)*d*0.8+60).toFixed(0)+'px;--r:'+(Math.random()*540-270).toFixed(0)+'deg;animation-delay:'+(Math.random()*0.08).toFixed(2)+'s';
+    b.appendChild(p);
+  }
+  document.body.appendChild(b); setTimeout(()=>b.remove(),1300);
+}
+
+function finishSession(early){
+  const mins=Math.max(1,Math.round((Date.now()-sessionStart)/60000));
+  logSession(sessionId, SESSIONS[sessionId].title, mins);
+  pbeep(660,.12); pbeep(880,.12,.15); pbeep(1100,.2,.3); buzz([80,60,80]);
+  if(!early) say('Session complete. Nice work.');
+  closePlayer();
+  burst();
+  let h='<div class="fin-hero"><svg class="fin-check" viewBox="0 0 88 88"><circle cx="44" cy="44" r="40"/><path d="M27 45l11 11 23-24"/></svg>'+
+    '<h2>'+(early?'Logged':'Session complete')+'</h2><p style="margin:0">'+esc(SESSIONS[sessionId].title)+'</p></div>'+
+    '<div class="fin-stats"><div><b class="num">'+mins+'</b><span>minutes</span></div><div><b class="num">'+setsDone+'</b><span>sets</span></div><div><b class="num">'+weekCount(0)+'</b><span>this week</span></div></div>';
+  if(usedSlots.length){
+    h+='<p>How did the ladder work feel? "Easy" (top of the range, 2–3 reps spare, pain in the green) moves you up a rung for next time.</p>';
+    usedSlots.forEach(id=>{
+      const L=LADDERS[id], cur=lvl(id);
+      h+='<div class="fb-row" data-slot="'+id+'"><div class="fn">'+esc(curDef(id).n)+'<span>'+esc(L.name)+' · rung '+(cur+1)+' of '+L.levels.length+'</span></div>'+
+         '<div class="fb-btns"><button data-fb="down">Hard</button><button data-fb="keep" class="sel-keep">Right</button><button data-fb="up">Easy</button></div></div>';
+    });
+    if(usedSlots.includes('knee'))
+      h+='<p class="km-note">The knee waits for tomorrow morning: Today will ask how it feels. "Easy" plus '+passesNeeded(lvl('knee'))+' settled mornings in a row moves it up. Still sore drops it a rung.</p>';
+  } else {
+    h+='<p>Nice work. Consistency is the whole game.</p>';
+  }
+  h+=checkinHTML();
+  h+='<button class="big-btn" id="fb-close" style="margin-top:16px">Save & close</button>';
+  openModal(h);
+  wireCheckin();
+  document.querySelectorAll('.fb-btns button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const row=b.closest('.fb-row'); row.querySelectorAll('button').forEach(x=>x.className='');
+      b.className = b.dataset.fb==='up'?'sel-up':b.dataset.fb==='down'?'sel-down':'sel-keep';
+      row.dataset.choice=b.dataset.fb; buzz(8);
+    });
+  });
+  $('#fb-close').addEventListener('click', ()=>{
+    let held='';
+    document.querySelectorAll('.fb-row[data-slot]').forEach(row=>{
+      const id=row.dataset.slot, c=row.dataset.choice;
+      if(id==='knee'){ kneeSessionDone(c); return; }
+      if(c==='up'){
+        // springy rungs load the knee hard, so they wait for the knee ladder
+        if(id==='run' && lvl('run')+1>=RUN_SPRING && lvl('knee')<KNEE_SPRING){ held='Pogo hops wait until the knee ladder reaches '+LADDERS.knee.levels[KNEE_SPRING].n+'.'; return; }
+        levels[id]=Math.min(LADDERS[id].levels.length-1, lvl(id)+1);
+      }
+      if(c==='down') levels[id]=Math.max(0, lvl(id)-1);
+    });
+    store.set('levels',levels); saveCheckin(); closeModal(); render();
+    if(held) toast(held);
+  });
+}
+
+/* ---- exercise demo sheet (Library, Today preview) ---- */
+let demoStage=null;
+function openDemo(def){
+  if(!def) return;
+  const dose = def.mode==='time' ? ((def.sets>1?def.sets+' × ':'')+def.secs+'s'+(def.perSide?' / side':'')) : ((def.sets>1?def.sets+' × ':'')+def.reps);
+  openModal('<h2>'+esc(def.n)+'</h2><p style="margin:0">'+esc(dose)+'</p>'+
+    '<div class="demo-stage"><div class="p-fig" id="demo-fig"></div></div>'+
+    '<p>'+esc(def.d)+'</p><ul class="cue-list">'+(def.cues||[]).map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>'+
+    '<p style="margin-top:10px"><a class="vid-link" href="'+ytLink(def.n)+'" target="_blank" rel="noopener">Watch form videos ↗</a></p>'+
+    '<button class="ghost-btn" id="demo-close" style="margin-top:12px">Close</button>',
+    ()=>{ if(demoStage){ demoStage.destroy(); demoStage=null; } });
+  const host=document.getElementById('demo-fig');
+  const mv=moveFor(def.n);
+  if(window.Figure && mv){ demoStage=Figure.Stage(host,{aspect:stageAspect(host)}); demoStage.set(mv).play(); }
+  else host.parentNode.style.display='none';
+  $('#demo-close').addEventListener('click', ()=>closeModal());
+}
+function defByName(n){
+  for(const id in LADDERS) for(const v of LADDERS[id].levels){ if(v.n===n) return v; if(v.alt && v.alt.n===n) return v.alt; }
+  for(const k in DRILLS){ if(DRILLS[k].n===n) return DRILLS[k]; }
+  return null;
+}
+document.addEventListener('click', e=>{
+  const b=e.target.closest('[data-demo]'); if(!b) return;
+  e.preventDefault(); e.stopPropagation(); buzz(6); openDemo(defByName(b.dataset.demo));
+});
+
+let modalCleanup=null;
+function openModal(html, onClose){
+  if(modalCleanup){ const f=modalCleanup; modalCleanup=null; f(); }
+  const w=$('#modal-wrap'); w.classList.remove('closing');
+  $('#modal').innerHTML=html; $('#modal').scrollTop=0; w.classList.add('on');
+  modalCleanup=onClose||null;
+}
+function closeModal(instant){
+  stopMetro();
+  if(modalCleanup){ const f=modalCleanup; modalCleanup=null; f(); }
+  const w=$('#modal-wrap');
+  if(instant || matchMedia('(prefers-reduced-motion: reduce)').matches){ w.classList.remove('on','closing'); return; }
+  w.classList.add('closing');
+  setTimeout(()=>{ w.classList.remove('on','closing'); }, 190);
+}
+document.getElementById('modal-wrap').addEventListener('click', e=>{ if(e.target.id==='modal-wrap') closeModal(); });
+
+// light haptic tick on key controls
+document.addEventListener('pointerdown', e=>{ if(e.target.closest('.big-btn,nav button,.swap-list button,.lvl-ctl button')) buzz(6); }, {passive:true});
+
+/* =====================================================================
+   First run / what's new + boot
+   ===================================================================== */
+if(!store.get('onboarded', false)){
+  openModal(
+    '<h2>Welcome to Stepwise</h2>'+
+    '<p>Your week: <strong>three strength days</strong> (Mon, Wed, Fri, about 30 minutes), two walks, a stretch day and a rest day. Every exercise has a little moving demo, and the app talks you through it.</p>'+
+    '<p><strong>Ladders:</strong> key exercises have progression rungs. After each workout you rate them, and "Easy" levels you up. The knee also waits for a settled next morning. Set your starting rungs in the Library if you like.</p>'+
+    '<p><strong>Pain rule:</strong> up to 3/10 that settles by morning is fine. More than that: drop a rung, don’t stop. Sharp pain: stop that move today.</p>'+
+    '<p><strong>Install:</strong> in Chrome, tap ⋮ → <strong>Add to Home screen</strong> to make this a real app.</p>'+
+    '<button class="big-btn" id="ob-go" style="margin-top:14px">Let’s go</button>'
+  );
+  document.getElementById('ob-go').addEventListener('click', ()=>{ store.set('onboarded', true); closeModal(); });
+}
+if(!blockStart){ blockStart=todayISO(); store.set('blockStart', blockStart); }
+
+render();
+moveInd();
+window.addEventListener('resize', ()=>{ if(figStage && $('#player').classList.contains('on')){ const st=steps[stepIx]; if(!st) return; const sh=st.kind==='rest'?steps.slice(stepIx+1).find(x=>x.kind==='work'):st; figStage.resize(stageAspect($('#p-fig'))); figStage.set(sh?moveFor(sh.name):null,{flip:!!(sh&&sh.side==='Left')}).play(); } });
+
+// Offline support when served with sw.js alongside (skipped silently elsewhere).
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
