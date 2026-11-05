@@ -64,3 +64,15 @@ It then runs full-screen and offline like a native app.
 - `sw.js` — service worker for offline use
 - `manifest.webmanifest`, `icon.svg` — PWA install metadata
 - `.github/workflows/pages.yml` — GitHub Pages deploy
+
+## Stepwise (`mum/`)
+
+A second app for Mum's knees, built on the same engine. It lives at `/mum/` on the same GitHub Pages site and installs as its own app.
+
+- **Her knees:** both since Aug 2026. Left: mild early osteoarthritis on X-ray (small bony spur), started after a slide at tennis. Right: a knock on furniture. Pain mainly going downstairs, in low squats and after long sitting. No kneeling.
+- **Week:** three ~30-minute strength days (Mon, Wed, Fri), two walk + stretch days, a stretch + balance day, a rest day.
+- **Ladders:** knee (wall sit → slow box squats → split squat → step-downs, loaded), side of hip, glute bridge, hinge, calf, and Back to running (march → pogo hops → skipping → walk-jog), which waits until the knee reaches the loaded step-down.
+- Keeps Sturdy's next-morning knee check, knee mode, pain traffic light, check-ins and fortnightly benchmarks (stairs, step-downs, 30s sit to stand, calf raises).
+- Shares `figure.js` and `moves.js` with Sturdy; a few new exercise names reuse existing animations (aliases at the top of `mum/index.html`).
+- Data is stored under `stepwise.*` in `localStorage` and each app's service worker only clears its own caches, so both can sit on one phone.
+- Smoke test: `python3 dev/mumtest.py OUTDIR`.
