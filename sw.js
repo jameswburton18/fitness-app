@@ -19,6 +19,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
+  if (url.origin === location.origin && url.pathname.includes('/mum/')) return; // Stepwise has its own worker
   if (url.origin === location.origin) {
     e.respondWith(
       fetch(e.request)
@@ -27,11 +28,11 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, copy));
           return res;
         })
-        .catch(() => caches.match(e.request).then(m => m || caches.match('./index.html')))
+        .catch(() => caches.open(CACHE).then(c => c.match(e.request).then(m => m || c.match('./index.html'))))
     );
   } else {
     e.respondWith(
-      caches.match(e.request).then(m => m || fetch(e.request).then(res => {
+      caches.open(CACHE).then(c => c.match(e.request)).then(m => m || fetch(e.request).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy));
         return res;

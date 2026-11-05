@@ -570,7 +570,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
 
     <div class="card">
       <div class="eyebrow">My kit</div>
-      <p style="margin-bottom:4px">You already have bands and weights, so both are ticked. A mat for the floor exercises and the bottom stair are all you need besides.</p>
+      <p style="margin-bottom:4px">You already have bands and weights, so both are ticked. Besides those you need the bottom stair and somewhere to lie down. The bridges, clamshells and side-lying raises work just as well on the bed, so there’s no need to get down to the floor or kneel.</p>
       <div id="kit-list"></div>
     </div>
 
@@ -606,7 +606,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
 
     <div class="card">
       <div class="eyebrow">When to level up</div>
-      <p>Finish all sets at the top of the range, feeling like you had <strong>2–3 more reps in the tank</strong> and within the green light, two sessions in a row. Then take the next rung. The app asks after each workout. Be honest in both directions.</p>
+      <p>Finish all sets at the top of the range, feeling like you had <strong>2–3 more reps in the tank</strong> and within the green light. Then rate it “Easy” after the workout and the app moves you to the next rung. Be honest in both directions.</p>
       <p><strong>The knee is stricter.</strong> Knees react the next day, so it also needs the next morning to be back to normal: “Easy” plus 2 settled mornings in a row (3 in stage 1). Sore the next morning drops it a rung.</p>
     </div>
 
@@ -614,7 +614,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
       <div class="eyebrow">Back to running and tennis</div>
       <p>Running puts several times your bodyweight through the knee with every step, so it’s built up in steps:</p>
       <ol class="gates">
-        <li><strong>Knee ladder at the loaded step-down</strong>, step-downs ≤2/10 and a brisk 30-minute walk with no flare → pogo hops unlock in the Back to running ladder.</li>
+        <li><strong>Knee ladder at the loaded step-down</strong> → pogo hops unlock in the Back to running ladder. Only take them if step-downs are ≤2/10 and a brisk 30-minute walk doesn’t flare the knee.</li>
         <li><strong>3 × 20s pogo hops and skipping, fine the next morning</strong> → walk-jog: 1 min easy jog / 2 min walk × 8, every other day. Add a little jogging each week while mornings stay settled.</li>
         <li><strong>20 minutes of easy continuous jogging</strong> → side-to-side steps and gentle tennis movement drills.</li>
         <li><strong>Drills feel normal</strong> → a relaxed hit, then back to matches. A physio check before this step is a good idea.</li>
@@ -719,7 +719,7 @@ button.ws{padding:4px 0 2px; border-radius:12px}
 <script src="../moves.js"></script>
 <script>
 // Mum's exercises that reuse an existing Sturdy animation under a new name
-(function(M){ const a={"Goblet squat to a chair":"Box squat to a chair","Loaded step-down":"Step-down","Walk-jog prep":"Strides prep","Wall sit, easy hold":"Tendon wall sit"};
+(function(M){ const a={"Wall sit, quarter depth":"Tendon wall sit","Goblet squat to a chair":"Box squat to a chair","Loaded step-down":"Step-down","Walk-jog prep":"Strides prep","Wall sit, easy hold":"Tendon wall sit"};
   for(const k in a) if(!M[k] && M[a[k]]) M[k]=M[a[k]]; })(window.MOVES||{});
 </script>
 <script>
@@ -735,7 +735,7 @@ const LADDERS = {
     name:'Knee strength', area:'Knees · stairs',
     why:'Three stages that rebuild the thigh muscles that control the knee, ending with the exact movement that hurts: stepping down. It only moves up after settled next mornings, because knees often react a day later.',
     levels:[
-      {n:'Wall sit', stage:1, mode:'time', secs:30, sets:4, d:'Back flat on the wall, feet a step out. Slide down only a little, about a quarter of the way to sitting. Hold it firmly', cues:['Holds like this often ease kneecap pain','Push the floor away through the whole foot','Knee ≤3/10 during, and settled by the next morning']},
+      {n:'Wall sit, quarter depth', stage:1, mode:'time', secs:30, sets:4, d:'Back flat on the wall, feet a step out. Slide down only a little, about a quarter of the way to sitting. Hold it firmly', cues:['Holds like this often ease kneecap pain','Push the floor away through the whole foot','Knee ≤3/10 during, and settled by the next morning']},
       {n:'Slow high box squat', stage:2, mode:'reps', reps:'10', sets:3, d:'Sit back to a high seat (bed edge, or a chair with a cushion on it). 3s down, light touch, 3s up', cues:['Slow both ways, no flopping onto the seat','Knees point the same way as the toes','Use your hands on your thighs to help at first if you need to']},
       {n:'Slow box squat to a chair', stage:2, mode:'reps', reps:'10', sets:3, d:'Normal chair height. 3s down, touch the seat, 3s up', cues:['Sit back, as if the chair is a little further away than it is','Weight through the whole foot','Hold a weight at your chest when 3×10 is easy']},
       {n:'Slow split squat', stage:2, mode:'reps', reps:'8 / side', sets:3, d:'One foot well in front of the other, hand on a wall or chair back. 3s down, 3s up, only part way down', cues:['Torso tall, front heel heavy','Go a little deeper each week, staying ≤3/10','The back knee never touches the floor']},
@@ -807,7 +807,7 @@ const DRILLS = {
   bandwalk:    {n:'Lateral band walk', mode:'reps', reps:'10 steps each way', sets:2, needs:'band', d:'Loop band just above the knees, slight squat, step sideways', cues:['Toes forward, knees pushed out against the band','Stay low and level','Slow steps beat big steps'], area:'Hips'},
   isowall:     {n:'Wall sit, easy hold', mode:'time', secs:45, sets:5, d:'Back on the wall, knees bent only a little. Hold it firmly. Steady holds like this calm a grumpy knee', cues:['Hard enough to feel the thighs working, knee ≤3/10','If it bites, slide up a little','Knees over the middle toes'], area:'Knee mode'},
   balance:     {n:'Single-leg balance, eyes busy', mode:'time', secs:30, perSide:true, d:'Stand on one leg near a worktop, turn your head slowly side to side', cues:['Barefoot','Fingertips ready on the worktop','Eyes closed for 10s once it’s easy'], area:'Balance'},
-  quadstretch: {n:'Standing quad stretch', mode:'time', secs:30, perSide:true, d:'Hold a chair. Bring one heel toward your bottom, knees together', cues:['Tuck the pelvis to feel it more','Stop short of full bend if the kneecap complains','A towel round the ankle helps if you can’t reach'], area:'Cool-down'},
+  quadstretch: {n:'Standing quad stretch', mode:'time', secs:30, perSide:true, d:'Hold a chair. Loop a towel or band round one ankle and draw the heel gently back, knees together', cues:['Only as far as a mild stretch on the front of the thigh','Stop well short of a full bend, and never into kneecap pain','Tuck the pelvis to feel it more without bending further'], area:'Cool-down'},
   calfstretch: {n:'Wall calf stretch', mode:'time', secs:30, perSide:true, d:'Back leg straight, heel down, lean to the wall; then bend the back knee a little', cues:['Straight-knee then bent-knee','Heel stays down'], area:'Cool-down'},
   hamfloss:    {n:'Hamstring floss', mode:'time', secs:40, perSide:true, d:'On your back, hold behind one thigh, slowly straighten and bend the knee', cues:['Gentle stretch, never a yank','Slow and smooth'], area:'Cool-down'},
   figure4:     {n:'Figure-4 stretch', mode:'time', secs:45, perSide:true, d:'On your back, ankle over the opposite knee, draw that thigh toward you', cues:['Flex the crossed foot','Breathe long'], area:'Stretch'},
@@ -1564,11 +1564,16 @@ $('#btn-checkin').addEventListener('click', openCheckin);
 
 const ytLink = name => 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' exercise proper form');
 
-function render(){ renderToday(); renderPlan(); renderLibrary(); renderProgress(); renderTrends(); }
+// Springy rungs wait for the knee. Re-check on every render so a knee that drops back
+// (sore morning, knee mode ending a rung lower, the Library buttons) locks them again.
+function capRun(){
+  if(lvl('knee') < KNEE_SPRING && lvl('run') >= RUN_SPRING){ levels.run = RUN_SPRING-1; store.set('levels', levels); }
+}
+function render(){ capRun(); renderToday(); renderPlan(); renderLibrary(); renderProgress(); renderTrends(); }
 
 /* backup: file download/upload, clipboard fallback where downloads are blocked */
 function applyBackup(d){
-  if(!d || !d.levels || !d.history){ alert('That doesn’t look like a Stepwise backup.'); return; }
+  if(!d || !d.levels || !d.history || d.app!=='stepwise'){ alert('That doesn’t look like a Stepwise backup.'); return; }
   levels=d.levels; history=d.history; painLog=d.pain||[];
   if(d.kit) kit=d.kit;
   if(d.tests) tests=d.tests;

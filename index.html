@@ -1687,7 +1687,7 @@ function render(){ renderToday(); renderPlan(); renderLibrary(); renderProgress(
 
 /* backup: file download/upload, clipboard fallback where downloads are blocked */
 function applyBackup(d){
-  if(!d || !d.levels || !d.history){ alert('That doesn’t look like a Sturdy backup.'); return; }
+  if(!d || !d.levels || !d.history || (d.app && d.app!=='sturdy')){ alert('That doesn’t look like a Sturdy backup.'); return; }
   levels=d.levels; history=d.history; painLog=d.pain||[];
   if(d.kit) kit=d.kit;
   if(d.tests) tests=d.tests;
